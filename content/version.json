@@ -1,5 +1,5 @@
 {
-  "version": "1.1.7",
-  "notes": "✨ Neu: Anheften (Tracking)\n• Text, Sticker, 3D-Objekte, Feuer oder Lichter an einem Punkt im Video festmachen – einfach „📌 Anheften“ drücken und im Bild auf den Punkt klicken\n• Mit „Glätten“, „Genau auf den Punkt“, „Neu anheften“ und „Lösen“",
+  "version": "1.1.8",
+  "notes": "🍉 Melonenclips 1.2.0 – KI & FFmpeg\n\n✨ Neu: KI-Assistent (Tab „KI“)\n• 🪄 Alles automatisch: Beat-Schnitt, Farben & Lautstärke mit einem Klick\n• 🥁 Beat-Erkennung mit BPM – Beats als Marker\n• ✂️ Automatisch auf den Beat schneiden (mit Zoom-Puls)\n• 📱 Auto-Reframe: Querformat → TikTok-Hochformat, das Motiv bleibt im Bild\n• 🎬 Szenen erkennen und automatisch schneiden\n• 🤫 Stille/Pausen automatisch entfernen\n• ✨ Auto-Verbessern (Helligkeit, Kontrast, Farbe)\n• 🔊 Lautstärke angleichen (−14 LUFS)\n\n⚡ Neu: FFmpeg im Programm\n• Export als echtes MP4 (H.264) oder MP3 – läuft überall\n• MKV, AVI, WMV, HEVC & Co. werden beim Import automatisch umgewandelt\n• Genauere Szenen-, Stille- und Lautheits-Erkennung",
   "date": "2026-11-13"
 }
