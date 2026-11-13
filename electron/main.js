@@ -52,7 +52,7 @@ function repoInfo() {
 }
 const GH_HEADERS = { 'User-Agent': 'Melonenclips', 'X-GitHub-Api-Version': '2022-11-28' };
 async function ghRaw(ri, p) {
-  const r = await fetch(`https://api.github.com/repos/${ri.owner}/${ri.repo}/contents/${p}?ref=${ri.branch}`, { headers: { ...GH_HEADERS, Accept: 'application/vnd.github.raw' }, cache: 'no-store' });
+  const r = await fetch(`https://api.github.com/repos/${ri.owner}/${ri.repo}/contents/${p}?ref=${ri.branch}&t=${Date.now()}`, { headers: { ...GH_HEADERS, Accept: 'application/vnd.github.raw', 'Cache-Control': 'no-cache' }, cache: 'no-store' });
   if (!r.ok) throw new Error(r.status === 404 ? 'Noch keine Version online' : `GitHub antwortet mit ${r.status}`);
   return Buffer.from(await r.arrayBuffer());
 }
@@ -72,8 +72,8 @@ function saveConfig({ repo, token }) {
   fs.writeFileSync(PUB_FILE, JSON.stringify(p, null, 2));
 }
 async function ghApi(ri, token, method, p, body) {
-  const r = await fetch(`https://api.github.com/repos/${ri.owner}/${ri.repo}/contents/${p}${method === 'GET' ? `?ref=${ri.branch}` : ''}`, {
-    method, headers: { ...GH_HEADERS, Accept: 'application/vnd.github+json', Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  const r = await fetch(`https://api.github.com/repos/${ri.owner}/${ri.repo}/contents/${p}${method === 'GET' ? `?ref=${ri.branch}&t=${Date.now()}` : ''}`, {
+    method, headers: { ...GH_HEADERS, Accept: 'application/vnd.github+json', Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }, cache: 'no-store',
     body: body ? JSON.stringify(body) : undefined
   });
   if (method === 'GET' && r.status === 404) return null;

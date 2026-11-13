@@ -188,8 +188,9 @@ $('#pubGo').onclick=async()=>{
   const lg=$('#pubLog');
   if(!pickedFile){ lg.className='err'; lg.textContent='Bitte zuerst die neue Editor-Datei wählen.'; return; }
   $('#pubGo').disabled=true;
-  try{ await N.publish({file:pickedFile,version:$('#newVer').value.trim(),notes:$('#pubNotes').value.trim(),rebuild:$('#rebuild').checked});
-    lg.className='ok'; pickedFile=null; $('#fileName').textContent='noch keine gewählt'; $('#pubNotes').value=''; $('#newVer').value=''; const c=await N.pubConfig(); $('#online').textContent='Version '+c.online; $('#newVer').value=bump(c.online); }
+  const ver=$('#newVer').value.trim();
+  try{ await N.publish({file:pickedFile,version:ver,notes:$('#pubNotes').value.trim(),rebuild:$('#rebuild').checked});
+    lg.className='ok'; pickedFile=null; $('#fileName').textContent='noch keine gewählt'; $('#pubNotes').value=''; $('#online').textContent='Version '+ver; $('#newVer').value=bump(ver); setTimeout(checkContent,1500); }
   catch(e){ lg.className='err'; lg.textContent=String(e.message||e).replace(/^Error invoking remote method '[^']+': (Error: )?/,''); }
   finally{ $('#pubGo').disabled=false; }
 };
