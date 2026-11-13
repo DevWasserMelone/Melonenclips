@@ -117,7 +117,7 @@ textarea{width:100%;resize:vertical;min-height:64px}
 .lane{position:relative;flex:none}
 .lane.dragover{background:rgba(34,227,211,.06)}
 .clip{position:absolute;top:4px;bottom:4px;border-radius:6px;overflow:hidden;cursor:grab;border:1px solid rgba(255,255,255,.14);user-select:none}
-.clip.shape{background:#6b2350}.clip.model{background:linear-gradient(135deg,#0f6b66,#1d3f7a)}.clip.camera{background:repeating-linear-gradient(45deg,#4a4f5c 0 8px,#3a3f4b 8px 16px)}.clip.particles{background:linear-gradient(90deg,#7a4a12,#8a2d4a)}.clip.effect{background:linear-gradient(90deg,#5a2d8a,#2d5a8a)}.clip .beat{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.45);pointer-events:none}
+.clip.shape{background:#6b2350}.clip.model{background:linear-gradient(135deg,#0f6b66,#1d3f7a)}.clip.camera{background:repeating-linear-gradient(45deg,#4a4f5c 0 8px,#3a3f4b 8px 16px)}.clip.particles{background:linear-gradient(90deg,#7a4a12,#8a2d4a)}.clip.light{background:linear-gradient(90deg,#8a6a10,#b8901a)}.clip.effect{background:linear-gradient(90deg,#5a2d8a,#2d5a8a)}.clip .beat{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.45);pointer-events:none}
 .clip.video{background:#24406f}.clip.image{background:#2c5d48}.clip.text{background:#80601e}.clip.audio{background:#3b2a6b}
 .clip.sel{border:2px solid #fff;z-index:2}
 .clip .strip{position:absolute;inset:0;display:flex;overflow:hidden}
@@ -499,7 +499,7 @@ const TEXT_PRESETS=[
  ['Kino',{font:'"Times New Roman", serif',bold:false,size:80,upper:true,color:'#f3e6c4',animIn:'fade',animInDur:1.2,animOut:'fade',animOutDur:1}]
 ];
 const STICKERS='😀 😂 🥹 😍 😎 🤯 😭 🥳 🤔 😴 😡 🤡 👍 👎 👏 🙌 💪 🙏 🔥 ✨ ⭐ 💥 💯 ❤️ 💔 💙 💚 💛 🎉 🎁 🎵 🎬 📸 🚀 ⚡ 🌈 ☀️ 🌙 ❄️ 🍕 🍔 ☕ 🎮 🏆 ⚽ 🚗 ✈️ 📍 ➡️ ⬅️ ⬆️ ⬇️ ✅ ❌ ❓ ❗ 💬 👀 🚨 💀'.split(' ');
-const TYPE_LABEL={video:'Video',image:'Bild',text:'Text',audio:'Audio',shape:'Form',effect:'Effekt',model:'3D',camera:'Kamera',particles:'Partikel'};
+const TYPE_LABEL={video:'Video',image:'Bild',text:'Text',audio:'Audio',shape:'Form',effect:'Effekt',model:'3D',camera:'Kamera',particles:'Partikel',light:'Licht'};
 
 /* ---------- State ---------- */
 const S={media:[],tracks:[],clips:[],settings:{aspect:'16:9',res:1080,bg:'#000000',bgMode:'color',markers:[],light:{az:-35,el:40,int:1.1,col:'#ffffff',amb:0.35}},t:0,playing:false,selected:null,pps:60,snap:true,exporting:false,guide:null};
@@ -528,6 +528,7 @@ function baseClip(type){
     fx:'glitch',amt:60,
     is3d:false,rx:0,ry:0,z:0,prim:'cube',mcolor:'#22e3d3',metal:0.3,rough:0.4,emis:0,wire:false,spin:0,tintModel:false,
     orbitY:0,orbitX:0,dist:1,panX:0,panY:0,roll:0,fov:50,camShake:0,
+    lKind:'point',lColor:'#ffe2b0',lInt:1.6,lRange:0.9,lDecay:1,lAngle:40,lSoft:0.45,lBeam:0,lOnObj:true,lOnLayers:true,lDark:0,lFlicker:0,lFlickerSpd:8,lPulse:0,lPulseAmt:0,lGlow:0.5,lGlowSize:0.18,lCore:0.08,lRays:0,lRayCount:8,lRayRot:0,lRaySpin:0,lStreak:0,lStreakLen:0.6,lStreakW:0.012,lFlare:0,lFlareN:7,lPreset:'punkt',ps:null,fxp:null,
     pPreset:'funken',pAmount:1,pSize:1,pSpeed:1,pGrav:1,pLife:1,pWind:0,pColorOn:false,pColor:'#ffffff',pEmitter:'auto',pPrewarm:false,
     parent:'',autoOrient:false,wigF:2,wigA:0,wigR:0,kfLoop:'none'};
 }
@@ -536,7 +537,7 @@ const TYPE_LABEL2={shape:'Form',effect:'Effekt'};
 const BLENDS=[['source-over','Normal'],['multiply','Multiplizieren'],['screen','Negativ multipl.'],['overlay','Überlagern'],['darken','Abdunkeln'],['lighten','Aufhellen'],['color-dodge','Farbig abwedeln'],['color-burn','Farbig nachbelichten'],['hard-light','Hartes Licht'],['soft-light','Weiches Licht'],['difference','Differenz'],['exclusion','Ausschluss'],['hue','Farbton'],['saturation','Sättigung'],['color','Farbe'],['luminosity','Luminanz']];
 const MASKS=[['none','Keine'],['circle','Kreis'],['rect','Rechteck'],['heart','Herz'],['star','Stern'],['linear','Linear (oben)'],['split','Split (links)']];
 const SHAPES=[['rect','Rechteck'],['round','Abgerundet'],['circle','Kreis'],['triangle','Dreieck'],['star','Stern'],['heart','Herz'],['arrow','Pfeil'],['line','Linie'],['bg','Farbfläche (Vollbild)'],['progress','Fortschrittsbalken'],['visualizer','Audio-Visualizer'],['wave','Audio-Welle']];
-const FX=[['glitch','Glitch'],['rgb','RGB-Split'],['vhs','VHS'],['oldfilm','Alter Film'],['grain','Filmkorn'],['pixel','Verpixeln'],['shake','Kamera-Wackeln'],['zoompulse','Zoom-Puls'],['blur','Unschärfe'],['mirror','Spiegel'],['kaleido','Kaleidoskop'],['rainbow','Regenbogen'],['strobe','Stroboskop'],['invert','Invertieren'],['bw','Schwarzweiß'],['letterbox','Kinobalken'],['lightleak','Lichteinfall'],['spotlight','Spotlight'],['adjust','Anpassungsebene']];
+const FX=[['glitch','Glitch'],['rgb','RGB-Split'],['vhs','VHS'],['oldfilm','Alter Film'],['grain','Filmkorn'],['pixel','Verpixeln'],['shake','Kamera-Wackeln'],['zoompulse','Zoom-Puls'],['blur','Unschärfe'],['mirror','Spiegel'],['kaleido','Kaleidoskop'],['rainbow','Regenbogen'],['strobe','Stroboskop'],['invert','Invertieren'],['bw','Schwarzweiß'],['letterbox','Kinobalken'],['lightleak','Lichteinfall'],['spotlight','Spotlight'],['bloom','Leuchten (Bloom)'],['godrays','Lichtstrahlen'],['flare','Linsenreflex'],['ca','Chromatische Aberration'],['vignette','Vignette'],['haze','Dunst / Nebel'],['adjust','Anpassungsebene']];
 const AFX=[['none','Kein Effekt'],['echo','Echo'],['hall','Hall / Kirche'],['telefon','Telefon'],['radio','Altes Radio'],['megafon','Megafon'],['unterwasser','Unter Wasser'],['roboter','Roboter'],['tief','Basslastig'],['hell','Hell / dünn']];
 const CURVES={
   montage:{n:'Montage',p:[[0,2.5],[0.3,0.6],[0.7,0.6],[1,2.5]]},
@@ -600,7 +601,7 @@ function toggleKf(c,key){
   if(i>=0){ const v=kv(c,key,lt); c.kf[key].splice(i,1); if(!c.kf[key].length){ delete c.kf[key]; c[key]=v; } }
   else setKf(c,key,lt,insertVal(c,key,lt));
 }
-function kfKeysFor(c){ if(c.type==='audio') return ['volume']; if(c.type==='camera') return CAM_KEYS; if(c.type==='model'||c.is3d) return KF_KEYS.concat(['rx','ry','z']); return KF_KEYS; }
+function kfKeysFor(c){ if(c.type==='audio') return ['volume']; if(c.type==='camera') return CAM_KEYS; if(c.type==='light') return ['x','y','z','rx','ry','opacity','lInt','lRange','lAngle']; if(c.type==='model'||c.is3d) return KF_KEYS.concat(['rx','ry','z']); return KF_KEYS; }
 function toggleKfAll(c){
   if(!c){ toast('Wähle zuerst einen Clip aus'); return; }
   if(!inClip(c)){ toast('Setze die Abspielposition in den Clip'); return; }
@@ -1123,35 +1124,102 @@ function grainOver(g,W,H,alpha,fr){ const pat=g.createPattern(noiseTex(),'repeat
 function channelCopy(src,W,H,color,o){ o=offc(o,W,H); const g=o.g; g.globalCompositeOperation='source-over'; g.clearRect(0,0,W,H); g.drawImage(src,0,0); g.globalCompositeOperation='multiply'; g.fillStyle=color; g.fillRect(0,0,W,H); g.globalCompositeOperation='source-over'; return o; }
 function rgbSplit(g,src,W,H,dx,dy){ chR=channelCopy(src,W,H,'#ff0000',chR); chG=channelCopy(src,W,H,'#00ff00',chG); chB=channelCopy(src,W,H,'#0000ff',chB);
   g.fillStyle='#000'; g.fillRect(0,0,W,H); g.globalCompositeOperation='lighter'; g.drawImage(chR.c,dx,dy); g.drawImage(chG.c,0,0); g.drawImage(chB.c,-dx,-dy); g.globalCompositeOperation='source-over'; }
+function rgbRadial(g,src,W,H,k){ chR=channelCopy(src,W,H,'#ff0000',chR); chG=channelCopy(src,W,H,'#00ff00',chG); chB=channelCopy(src,W,H,'#0000ff',chB);
+  g.fillStyle='#000'; g.fillRect(0,0,W,H); g.globalCompositeOperation='lighter';
+  const d=(o,s)=>g.drawImage(o.c,W/2-W*s/2,H/2-H*s/2,W*s,H*s); d(chR,1+2*k); d(chG,1+k); d(chB,1); g.globalCompositeOperation='source-over'; }
+const pctF=v=>Math.round(v*100)+'%', intF=v=>String(Math.round(v)), degF=v=>Math.round(v)+'°';
+/* Feineinstellungen pro Effekt: [Schlüssel, Name, min, max, Schritt, Standard, Format] – oder [Schlüssel, Name, 'color', Standard] / [Schlüssel, Name, 'sel', Standard, Optionen] */
+const FXP={
+  glitch:[['freq','Häufigkeit',0,1,0.01,0.5,pctF],['blocks','Blöcke',0,24,1,6,intF],['shift','Farbversatz',0,1,0.01,0.6,pctF],['blockc','Farbblöcke',0,1,0.01,0.4,pctF]],
+  rgb:[['angle','Richtung',-180,180,1,0,degF],['radial','Zur Mitte hin',0,1,0.01,0,pctF]],
+  vhs:[['noise','Rauschen',0,1,0.01,0.5,pctF],['lines','Zeilen',0,1,0.01,0.6,pctF],['bleed','Farbverlauf',0,1,0.01,0.5,pctF],['track','Bandfehler',0,1,0.01,0.5,pctF],['stamp','„PLAY“ anzeigen',0,1,1,1,v=>v?'An':'Aus']],
+  oldfilm:[['sepia','Sepia',0,1,0.01,0.8,pctF],['scratch','Kratzer',0,1,0.01,0.5,pctF],['dust','Staub',0,1,0.01,0.5,pctF],['flick','Flackern',0,1,0.01,0.5,pctF],['vig','Vignette',0,1,0.01,0.7,pctF],['weave','Bildwackeln',0,1,0.01,0.4,pctF]],
+  grain:[['gsize','Korngröße',0.5,4,0.1,1,v=>v.toFixed(1)]],
+  pixel:[['psize','Pixelgröße',2,120,1,0,intF]],
+  shake:[['freq','Tempo',1,30,1,12,intF],['rot','Drehen',0,1,0.01,0.5,pctF],['zoom','Zoom',0,1,0.01,0.5,pctF],['mblur','Bewegungsunschärfe',0,1,0.01,0.4,pctF]],
+  zoompulse:[['bpm','Tempo (BPM)',30,240,1,60,intF],['zmax','Stärke',0,0.5,0.01,0.15,pctF]],
+  blur:[['mode','Art','sel','normal',[['normal','Normal'],['zoom','Zoom (radial)'],['motion','Bewegung (waagrecht)']]]],
+  strobe:[['speed','Blitze pro Sekunde',1,30,0.5,8,v=>v+'/s'],['scol','Farbe','color','#ffffff']],
+  letterbox:[['ratio','Format','sel','auto',[['auto','Mit Intensität'],['2.39','2.39:1 Kino'],['2','2:1'],['1.85','1.85:1']]],['lbcol','Farbe','color','#000000']],
+  lightleak:[['lc1','Farbe 1','color','#ff8c32'],['lc2','Farbe 2','color','#ff3c5a'],['speed','Tempo',0,3,0.05,1,v=>v.toFixed(2)+'×'],['lsize','Größe',0.2,2,0.05,0.7,pctF]],
+  spotlight:[['sx','Position X',-0.5,0.5,0.01,0,pctF],['sy','Position Y',-0.5,0.5,0.01,0,pctF],['ssize','Größe',0.1,1.5,0.01,0.5,pctF],['soft','Weichheit',0,1,0.01,0.6,pctF]],
+  rainbow:[['speed','Tempo',0,4,0.05,1,v=>v.toFixed(2)+'×']],
+  bloom:[['thr','Schwelle',0,1,0.01,0.6,pctF],['rad','Radius',1,120,1,28,v=>v+' px'],['tint','Farbe','color','#ffffff']],
+  ca:[['radial','Nur am Rand',0,1,0.01,0.8,pctF]],
+  vignette:[['vsize','Größe',0,1,0.01,0.45,pctF],['soft','Weichheit',0,1,0.01,0.6,pctF],['vcol','Farbe','color','#000000']],
+  haze:[['hcol','Farbe','color','#c9d4e0'],['hpos','Höhe',0,1,0.01,0.6,pctF],['hsoft','Verlauf',0.05,1,0.01,0.7,pctF]],
+  godrays:[['gx','Quelle X',-0.7,0.7,0.01,0.2,pctF],['gy','Quelle Y',-0.7,0.7,0.01,-0.3,pctF],['thr','Schwelle',0,1,0.01,0.55,pctF],['glen','Länge',0.05,1.5,0.01,0.7,pctF],['gcol','Farbe','color','#fff1d0']],
+  flare:[['fx','Position X',-0.7,0.7,0.01,0.25,pctF],['fy','Position Y',-0.7,0.7,0.01,-0.3,pctF],['fcol','Farbe','color','#ffe2b0'],['fsize','Größe',0.05,1,0.01,0.3,pctF],['fghost','Reflexe',0,10,1,7,intF],['frays','Strahlen',0,1,0.01,0.5,pctF],['fstreak','Streifen',0,1,0.01,0.3,pctF]]
+};
+function fxv(c,k){ const d=(FXP[c.fx]||[]).find(x=>x[0]===k); const v=c.fxp&&c.fxp[k]; return v!=null?v:(d?(d[2]==='color'||d[2]==='sel'?d[3]:d[5]):0); }
+function lumaThreshold(src,W,H,thr,scale){ /* helle Bereiche herausziehen (verkleinert, schnell) */
+  const w=Math.max(8,Math.round(W*scale)), h=Math.max(8,Math.round(H*scale)); fxT=offc(fxT,w,h); const g=fxT.g; g.setTransform(1,0,0,1,0,0); g.globalCompositeOperation='source-over'; g.globalAlpha=1;
+  g.clearRect(0,0,w,h); 
+  g.filter=`brightness(${(0.5/(thr*0.8+0.12)).toFixed(3)}) contrast(6) saturate(1.3)`; g.drawImage(src,0,0,w,h); g.filter='none';
+  return fxT; }
 function applyEffect(c,st,W,H,lt){
-  const a=clamp(kv(c,'opacity',lt)*st.a,0,1); if(a<=0) return; const A=c.amt/100, u=W/1920, fr=Math.floor(lt*24);
+  const a=clamp(kv(c,'opacity',lt)*st.a,0,1); if(a<=0) return; const A=c.amt/100, u=W/1920, fr=Math.floor(lt*24), P=k=>fxv(c,k);
   fxA=offc(fxA,W,H); const ga=fxA.g; ga.setTransform(1,0,0,1,0,0); ga.globalAlpha=1; ga.globalCompositeOperation='source-over'; ga.filter='none'; ga.clearRect(0,0,W,H); ga.drawImage(cv,0,0);
   fxB=offc(fxB,W,H); const g=fxB.g, src=fxA.c; g.setTransform(1,0,0,1,0,0); g.globalAlpha=1; g.globalCompositeOperation='source-over'; g.filter='none'; g.imageSmoothingEnabled=true; g.clearRect(0,0,W,H);
   switch(c.fx){
-    case 'rgb': rgbSplit(g,src,W,H,A*30*u,0); break;
-    case 'glitch': { const burst=rnd(Math.floor(lt*8)+0.5)<0.3+A*0.4; const off=burst?A*45*u*(rnd(fr)-0.5)*2:A*5*u; rgbSplit(g,src,W,H,off,0);
-      if(burst){ const n=3+Math.floor(rnd(fr+1)*6); for(let i=0;i<n;i++){ const y=rnd(fr*3+i)*H, hh=(0.02+rnd(fr*5+i)*0.08)*H, dx=(rnd(fr*7+i)-0.5)*W*0.15*A; g.drawImage(fxB.c,0,y,W,hh,dx,y,W,hh); } } break; }
-    case 'vhs': { rgbSplit(g,src,W,H,A*9*u,0); for(let i=0;i<3;i++){ const y=((lt*0.15+i*0.33)%1)*H, hh=H*0.015; g.drawImage(fxB.c,0,y,W,hh,(rnd(fr+i)-0.5)*24*u*A,y,W,hh); }
-      g.globalAlpha=0.2*A; g.fillStyle='#000'; const step=Math.max(2,Math.round(4*u)); for(let y=0;y<H;y+=step) g.fillRect(0,y,W,Math.max(1,Math.round(1.5*u))); g.globalAlpha=1;
-      grainOver(g,W,H,0.18*A,fr); g.fillStyle='rgba(255,255,255,.88)'; g.font=`${Math.round(40*u)}px "Courier New", monospace`; g.textBaseline='top'; g.fillText('▶ PLAY',50*u,40*u); break; }
-    case 'grain': g.drawImage(src,0,0); grainOver(g,W,H,0.12+A*0.35,fr); break;
-    case 'oldfilm': { g.filter=`sepia(${80*A}%) contrast(${100+20*A}%) brightness(${100-12*A+(rnd(fr)*10-5)*A}%)`; g.drawImage(src,0,0); g.filter='none'; grainOver(g,W,H,A*0.3,fr);
-      g.strokeStyle='rgba(30,20,10,.55)'; g.lineWidth=Math.max(1,2*u); for(let i=0;i<2;i++){ if(rnd(fr*3+i)<0.6){ const x=rnd(fr*11+i)*W; g.beginPath(); g.moveTo(x,0); g.lineTo(x+(rnd(fr+i)-0.5)*12*u,H); g.stroke(); } }
-      const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*0.3,W/2,H/2,Math.hypot(W,H)/2); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,0,${0.7*A})`); g.fillStyle=vg; g.fillRect(0,0,W,H); break; }
-    case 'pixel': { const sz=Math.max(2,Math.round((4+A*44)*u)), sw=Math.max(1,Math.round(W/sz)), sh=Math.max(1,Math.round(H/sz)); fxT=offc(fxT,sw,sh); fxT.g.clearRect(0,0,sw,sh); fxT.g.drawImage(src,0,0,sw,sh); g.imageSmoothingEnabled=false; g.drawImage(fxT.c,0,0,sw,sh,0,0,W,H); g.imageSmoothingEnabled=true; break; }
-    case 'shake': { const m=A*40*u, dx=(rnd(fr)-0.5)*2*m, dy=(rnd(fr+3)-0.5)*2*m, z=1+A*0.07; g.fillStyle=S.settings.bg; g.fillRect(0,0,W,H); g.translate(W/2+dx,H/2+dy); g.rotate((rnd(fr+5)-0.5)*0.035*A); g.drawImage(src,-W*z/2,-H*z/2,W*z,H*z); g.setTransform(1,0,0,1,0,0); break; }
-    case 'zoompulse': { const z=1+A*0.15*Math.pow(Math.abs(Math.sin(lt*Math.PI*2)),3); g.drawImage(src,W/2-W*z/2,H/2-H*z/2,W*z,H*z); break; }
-    case 'blur': g.filter=`blur(${(A*25*u).toFixed(1)}px)`; g.drawImage(src,0,0); g.filter='none'; break;
+    case 'rgb':{ const ang=P('angle')*Math.PI/180, d=A*30*u, rad=P('radial'); if(rad>0.01) rgbRadial(g,src,W,H,A*0.03*rad); else rgbSplit(g,src,W,H,Math.cos(ang)*d,Math.sin(ang)*d); break; }
+    case 'ca':{ const k=A*0.045; rgbRadial(g,src,W,H,k); const m=P('radial'); if(m>0){ g.save(); const r=Math.hypot(W,H)/2, gr=g.createRadialGradient(W/2,H/2,r*0.15,W/2,H/2,r*(0.35+0.5*(1-m))); gr.addColorStop(0,'#000'); gr.addColorStop(1,'rgba(0,0,0,0)');
+        fxT=offc(fxT,W,H); fxT.g.setTransform(1,0,0,1,0,0); fxT.g.globalCompositeOperation='source-over'; fxT.g.clearRect(0,0,W,H); fxT.g.drawImage(src,0,0); fxT.g.globalCompositeOperation='destination-in'; fxT.g.fillStyle=gr; fxT.g.fillRect(0,0,W,H); fxT.g.globalCompositeOperation='source-over'; g.drawImage(fxT.c,0,0); g.restore(); } break; }
+    case 'glitch':{ const fq=P('freq'), sh=P('shift'); const burst=rnd(Math.floor(lt*(4+fq*16))+0.5)<0.12+fq*0.6*Math.max(0.2,A); const off=burst?A*70*u*sh*(rnd(fr)-0.5)*2:A*6*u*sh; rgbSplit(g,src,W,H,off,0);
+      if(burst){ const n=Math.round(P('blocks')*(0.4+rnd(fr+1)*0.9)); for(let i=0;i<n;i++){ const y=rnd(fr*3+i)*H, hh=(0.01+rnd(fr*5+i)*0.07)*H, dx=(rnd(fr*7+i)-0.5)*W*0.2*A; g.drawImage(fxB.c,0,y,W,hh,dx,y,W,hh); }
+        const nc=Math.round(P('blockc')*6*rnd(fr+13)); for(let i=0;i<nc;i++){ g.globalCompositeOperation=i%2?'difference':'color-dodge'; g.fillStyle=['#00ffd5','#ff2bd6','#ffe600','#3c5bff'][i%4]; g.globalAlpha=0.5; g.fillRect(rnd(fr*11+i)*W,rnd(fr*17+i)*H,(0.04+rnd(fr*19+i)*0.25)*W,(0.005+rnd(fr*23+i)*0.03)*H); } g.globalAlpha=1; g.globalCompositeOperation='source-over'; } break; }
+    case 'vhs':{ rgbSplit(g,src,W,H,A*12*u*P('bleed')+1*u,0);
+      if(P('bleed')>0){ g.save(); g.globalAlpha=0.35*P('bleed'); g.filter=`blur(${(3*u*P('bleed')+0.5).toFixed(1)}px) saturate(160%)`; g.drawImage(fxB.c,4*u*P('bleed'),0); g.restore(); }
+      const tr=P('track'); for(let i=0;i<Math.round(1+tr*4);i++){ const y=((lt*(0.1+tr*0.25)+i*0.27+rnd(i)*0.1)%1)*H, hh=H*(0.008+0.02*tr*rnd(fr+i)); g.drawImage(fxB.c,0,y,W,hh,(rnd(fr+i)-0.5)*40*u*A*tr,y,W,hh);
+        g.globalAlpha=0.25*tr; g.fillStyle='#fff'; g.fillRect(0,y,W,Math.max(1,hh*0.15)); g.globalAlpha=1; }
+      if(P('lines')>0){ g.globalAlpha=0.28*A*P('lines'); g.fillStyle='#000'; const step=Math.max(2,Math.round(4*u)); for(let y=0;y<H;y+=step) g.fillRect(0,y,W,Math.max(1,Math.round(1.5*u))); g.globalAlpha=1; }
+      grainOver(g,W,H,0.3*A*P('noise'),fr);
+      if(P('stamp')>=0.5){ g.fillStyle='rgba(255,255,255,.88)'; g.font=`${Math.round(40*u)}px "Courier New", monospace`; g.textBaseline='top'; g.fillText('▶ PLAY',50*u,40*u); g.fillText(`SP 0:${pad(Math.floor(lt/60)%60)}:${pad(Math.floor(lt)%60)}`,W-330*u,H-80*u); } break; }
+    case 'grain':{ g.drawImage(src,0,0); const s=P('gsize'); const pat=g.createPattern(noiseTex(),'repeat'); g.save(); g.globalAlpha=0.12+A*0.4; g.globalCompositeOperation='overlay'; g.scale(s,s); g.translate(-rnd(fr)*256,-rnd(fr+7)*256); g.fillStyle=pat; g.fillRect(0,0,W/s+256,H/s+256); g.restore();
+      break; }
+    case 'oldfilm':{ const wv=P('weave'), dx=(vnoise(lt*6,1)*3*u)*wv*A, dy=(vnoise(lt*5,4)*6*u)*wv*A;
+      g.filter=`sepia(${Math.round(100*A*P('sepia'))}%) contrast(${100+25*A}%) brightness(${100-10*A+(rnd(fr)*14-7)*A*P('flick')}%)`; g.drawImage(src,dx,dy); g.filter='none'; grainOver(g,W,H,A*0.32,fr);
+      g.strokeStyle='rgba(25,18,10,.6)'; for(let i=0;i<Math.round(1+P('scratch')*4);i++){ if(rnd(fr*3+i)<0.25+P('scratch')*0.6){ const x=rnd(fr*11+i)*W; g.lineWidth=Math.max(1,(1+rnd(fr+i)*2)*u); g.globalAlpha=0.4+0.4*rnd(fr*2+i); g.beginPath(); g.moveTo(x,0); g.lineTo(x+(rnd(fr+i)-0.5)*14*u,H); g.stroke(); } }
+      g.fillStyle='rgba(20,14,8,.75)'; for(let i=0;i<Math.round(P('dust')*14);i++){ if(rnd(fr*29+i)<0.5){ const x=rnd(fr*31+i)*W, y=rnd(fr*37+i)*H, r=(1+rnd(fr*41+i)*5)*u; g.globalAlpha=0.5; g.beginPath(); g.ellipse(x,y,r,r*(0.4+rnd(i)),rnd(fr+i)*3,0,Math.PI*2); g.fill(); } } g.globalAlpha=1;
+      const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*0.3,W/2,H/2,Math.hypot(W,H)/2); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,0,${0.8*A*P('vig')})`); g.fillStyle=vg; g.fillRect(0,0,W,H); break; }
+    case 'pixel':{ const sz=Math.max(2,Math.round(P('psize')>0?P('psize')*u:(4+A*44)*u)), sw=Math.max(1,Math.round(W/sz)), sh=Math.max(1,Math.round(H/sz)); fxT=offc(fxT,sw,sh); fxT.g.setTransform(1,0,0,1,0,0); fxT.g.clearRect(0,0,sw,sh); fxT.g.drawImage(src,0,0,sw,sh); g.imageSmoothingEnabled=false; g.drawImage(fxT.c,0,0,sw,sh,0,0,W,H); g.imageSmoothingEnabled=true; break; }
+    case 'shake':{ const f=P('freq'), m=A*40*u, T=lt*f, sd=hashStr(c.id); const dx=vnoise(T,sd)*m, dy=vnoise(T,sd+3)*m, z=1+A*0.08*P('zoom')+0.01;
+      g.fillStyle=S.settings.bg; g.fillRect(0,0,W,H); const mb=P('mblur');
+      const drawAt=(ox,oy,al)=>{ g.save(); g.globalAlpha=al; g.translate(W/2+ox,H/2+oy); g.rotate(vnoise(T,sd+5)*0.04*A*P('rot')); g.drawImage(src,-W*z/2,-H*z/2,W*z,H*z); g.restore(); };
+      if(mb>0.01){ const pdx=vnoise(T-f*0.02,sd)*m, pdy=vnoise(T-f*0.02,sd+3)*m; for(let i=0;i<4;i++){ const k=i/3; drawAt(pdx+(dx-pdx)*k,pdy+(dy-pdy)*k,i===0?1:mb*0.45); } } else drawAt(dx,dy,1); break; }
+    case 'zoompulse':{ const ph=lt*P('bpm')/60; const z=1+P('zmax')*A*Math.pow(Math.max(0,Math.cos((ph%1)*Math.PI)),6)*1.0; g.drawImage(src,W/2-W*z/2,H/2-H*z/2,W*z,H*z); break; }
+    case 'blur':{ const m=P('mode'), R=A*25*u;
+      if(m==='zoom'){ g.drawImage(src,0,0); for(let i=1;i<=8;i++){ const z=1+A*0.012*i; g.globalAlpha=0.5/i+0.06; g.drawImage(src,W/2-W*z/2,H/2-H*z/2,W*z,H*z); } g.globalAlpha=1; }
+      else if(m==='motion'){ g.drawImage(src,0,0); for(let i=1;i<=8;i++){ const d=R*1.5*i/8; g.globalAlpha=0.22; g.drawImage(src,d,0); g.drawImage(src,-d,0); } g.globalAlpha=1; }
+      else { g.filter=`blur(${R.toFixed(1)}px)`; g.drawImage(src,0,0); g.filter='none'; } break; }
     case 'invert': g.filter='invert(1)'; g.drawImage(src,0,0); g.filter='none'; break;
     case 'bw': g.filter=`grayscale(1) contrast(${100+40*A}%)`; g.drawImage(src,0,0); g.filter='none'; break;
-    case 'rainbow': g.filter=`hue-rotate(${Math.round(lt*180)%360}deg) saturate(${100+A*80}%)`; g.drawImage(src,0,0); g.filter='none'; break;
+    case 'rainbow': g.filter=`hue-rotate(${Math.round(lt*180*P('speed'))%360}deg) saturate(${100+A*80}%)`; g.drawImage(src,0,0); g.filter='none'; break;
     case 'mirror': g.drawImage(src,0,0,W/2,H,0,0,W/2,H); g.save(); g.translate(W,0); g.scale(-1,1); g.drawImage(src,0,0,W/2,H,0,0,W/2,H); g.restore(); break;
-    case 'kaleido': { const hw=W/2,hh=H/2; for(const [sx,sy] of [[1,1],[-1,1],[1,-1],[-1,-1]]){ g.save(); g.translate(W/2,H/2); g.scale(sx,sy); g.drawImage(src,W/4,H/4,hw,hh,-hw,-hh,hw,hh); g.restore(); } break; }
-    case 'strobe': g.drawImage(src,0,0); if(fr%Math.max(2,Math.round(8-A*6))===0){ g.fillStyle='#fff'; g.globalAlpha=0.85*A; g.fillRect(0,0,W,H); g.globalAlpha=1; } break;
-    case 'letterbox': { g.drawImage(src,0,0); const bh=H*0.05+H*0.1*A; g.fillStyle='#000'; g.fillRect(0,0,W,bh); g.fillRect(0,H-bh,W,bh); break; }
-    case 'lightleak': { g.drawImage(src,0,0); g.globalCompositeOperation='screen'; const x=W*(0.5+0.45*Math.sin(lt*0.7)), y=H*(0.3+0.3*Math.cos(lt*0.5)); const lg=g.createRadialGradient(x,y,0,x,y,Math.max(W,H)*0.7); lg.addColorStop(0,`rgba(255,140,50,${0.75*A})`); lg.addColorStop(0.4,`rgba(255,60,90,${0.35*A})`); lg.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=lg; g.fillRect(0,0,W,H); g.globalCompositeOperation='source-over'; break; }
-    case 'spotlight': { g.drawImage(src,0,0); const r=Math.min(W,H)*(0.6-0.3*A); const sg=g.createRadialGradient(W/2,H/2,r*0.6,W/2,H/2,r*1.5); sg.addColorStop(0,'rgba(0,0,0,0)'); sg.addColorStop(1,`rgba(0,0,0,${0.85*A+0.1})`); g.fillStyle=sg; g.fillRect(0,0,W,H); break; }
-    case 'adjust': { g.filter=filterStr(c.f,0,u); g.drawImage(src,0,0); g.filter='none'; const f=c.f;
+    case 'kaleido':{ const hw=W/2,hh=H/2; for(const [sx,sy] of [[1,1],[-1,1],[1,-1],[-1,-1]]){ g.save(); g.translate(W/2,H/2); g.scale(sx,sy); g.drawImage(src,W/4,H/4,hw,hh,-hw,-hh,hw,hh); g.restore(); } break; }
+    case 'strobe':{ g.drawImage(src,0,0); const sp=P('speed'); if(((lt*sp)%1)<0.35){ g.fillStyle=P('scol'); g.globalAlpha=0.85*A; g.fillRect(0,0,W,H); g.globalAlpha=1; } break; }
+    case 'letterbox':{ g.drawImage(src,0,0); const rt=P('ratio'); const bh=rt==='auto'?H*0.05+H*0.1*A:Math.max(0,(H-W/parseFloat(rt))/2); g.fillStyle=P('lbcol'); g.fillRect(0,0,W,bh); g.fillRect(0,H-bh,W,bh); break; }
+    case 'lightleak':{ g.drawImage(src,0,0); g.globalCompositeOperation='screen'; const sp=P('speed'), x=W*(0.5+0.45*Math.sin(lt*0.7*sp)), y=H*(0.3+0.3*Math.cos(lt*0.5*sp)); const [r1,g1,b1]=hexToRgb(P('lc1')), [r2,g2,b2]=hexToRgb(P('lc2'));
+      const lg=g.createRadialGradient(x,y,0,x,y,Math.max(W,H)*P('lsize')); lg.addColorStop(0,`rgba(${r1},${g1},${b1},${0.8*A})`); lg.addColorStop(0.45,`rgba(${r2},${g2},${b2},${0.38*A})`); lg.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=lg; g.fillRect(0,0,W,H);
+      const x2=W*(0.5-0.5*Math.cos(lt*0.37*sp+1)), lg2=g.createLinearGradient(x2-W*0.3,0,x2+W*0.3,H); lg2.addColorStop(0,'rgba(0,0,0,0)'); lg2.addColorStop(0.5,`rgba(${r2},${g2},${b2},${0.18*A})`); lg2.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=lg2; g.fillRect(0,0,W,H); g.globalCompositeOperation='source-over'; break; }
+    case 'spotlight':{ g.drawImage(src,0,0); const cx=W/2+P('sx')*W, cy=H/2+P('sy')*H, r=Math.min(W,H)*P('ssize'), sf=P('soft'); const sg=g.createRadialGradient(cx,cy,r*(1-sf*0.9),cx,cy,r*(1+sf*1.2)); sg.addColorStop(0,'rgba(0,0,0,0)'); sg.addColorStop(1,`rgba(0,0,0,${0.9*A+0.05})`); g.fillStyle=sg; g.fillRect(0,0,W,H); break; }
+    case 'vignette':{ g.drawImage(src,0,0); const R=Math.hypot(W,H)/2, r0=R*(0.2+P('vsize')*0.7), [vr,vg2,vb]=hexToRgb(P('vcol')); const sg=g.createRadialGradient(W/2,H/2,r0*(1-P('soft')*0.8),W/2,H/2,Math.max(r0*1.05,R*(0.6+P('soft')*0.5))); sg.addColorStop(0,`rgba(${vr},${vg2},${vb},0)`); sg.addColorStop(1,`rgba(${vr},${vg2},${vb},${A})`); g.fillStyle=sg; g.fillRect(0,0,W,H); break; }
+    case 'haze':{ g.drawImage(src,0,0); const [hr,hg,hb]=hexToRgb(P('hcol')), y0=H*(1-P('hpos')), y1=Math.min(H,y0+H*P('hsoft')); const lg=g.createLinearGradient(0,y0-H*P('hsoft')*0.5,0,H); lg.addColorStop(0,`rgba(${hr},${hg},${hb},0)`); lg.addColorStop(clamp((y1-(y0-H*P('hsoft')*0.5))/(H-(y0-H*P('hsoft')*0.5)),0.05,1),`rgba(${hr},${hg},${hb},${0.85*A})`); lg.addColorStop(1,`rgba(${hr},${hg},${hb},${0.95*A})`);
+      g.globalCompositeOperation='screen'; g.fillStyle=lg; g.fillRect(0,0,W,H); g.globalCompositeOperation='source-over'; g.globalAlpha=0.35*A; g.fillStyle=lg; g.fillRect(0,0,W,H); g.globalAlpha=1; break; }
+    case 'bloom':{ g.drawImage(src,0,0); const t2=lumaThreshold(src,W,H,P('thr'),0.25); const [tr,tg,tb]=hexToRgb(P('tint'));
+      if(P('tint')!=='#ffffff'){ t2.g.globalCompositeOperation='multiply'; t2.g.fillStyle=P('tint'); t2.g.fillRect(0,0,t2.c.width,t2.c.height); t2.g.globalCompositeOperation='source-over'; }
+      g.globalCompositeOperation='lighter'; const R=P('rad')*u; for(const [k,al] of [[0.35,0.6],[1,0.5],[2.2,0.35]]){ g.filter=`blur(${(R*k).toFixed(1)}px)`; g.globalAlpha=al*A*1.4; g.drawImage(t2.c,0,0,W,H); } g.filter='none'; g.globalAlpha=1; g.globalCompositeOperation='source-over'; break; }
+    case 'godrays':{ g.drawImage(src,0,0); const t2=lumaThreshold(src,W,H,P('thr'),0.25); const cx=W/2+P('gx')*W, cy=H/2+P('gy')*H, L=P('glen'), [gr,gg,gb]=hexToRgb(P('gcol'));
+      t2.g.globalCompositeOperation='multiply'; t2.g.fillStyle=P('gcol'); t2.g.fillRect(0,0,t2.c.width,t2.c.height); t2.g.globalCompositeOperation='source-over';
+      g.globalCompositeOperation='lighter'; g.filter=`blur(${Math.round(3*u+L*6*u)}px)`; const N=40; for(let i=0;i<N;i++){ const z=1+L*i/N; g.globalAlpha=Math.min(1,A*0.19*(1-i/N)); g.drawImage(t2.c,cx-cx*z,cy-cy*z,W*z,H*z); } g.filter='none'; g.globalAlpha=1;
+      const sg=g.createRadialGradient(cx,cy,0,cx,cy,Math.min(W,H)*0.25); sg.addColorStop(0,`rgba(${gr},${gg},${gb},${0.35*A})`); sg.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=sg; g.fillRect(0,0,W,H); g.globalCompositeOperation='source-over'; break; }
+    case 'flare':{ g.drawImage(src,0,0); const fx=W/2+P('fx')*W, fy=H/2+P('fy')*H, rgb=rgbF(P('fcol')), [cr,cg,cb]=rgb.map(v=>Math.round(v*255)), sz=P('fsize')*Math.min(W,H);
+      g.save(); g.globalCompositeOperation='lighter';
+      const core=g.createRadialGradient(fx,fy,0,fx,fy,sz); core.addColorStop(0,`rgba(255,255,255,${A})`); core.addColorStop(0.08,`rgba(${cr},${cg},${cb},${0.8*A})`); core.addColorStop(0.35,`rgba(${cr},${cg},${cb},${0.22*A})`); core.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=core; g.fillRect(0,0,W,H);
+      const nr=Math.round(6+P('frays')*10); g.translate(fx,fy); for(let i=0;i<nr;i++){ g.rotate(Math.PI*2/nr+(rnd(i)-0.5)*0.2); const len=sz*(1.2+rnd(i+3)*1.6)*P('frays'); const lg=g.createLinearGradient(0,0,len,0); lg.addColorStop(0,`rgba(${cr},${cg},${cb},${0.35*A})`); lg.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=lg; g.fillRect(0,-sz*0.006-1,len,sz*0.012+2); } g.setTransform(1,0,0,1,0,0);
+      if(P('fstreak')>0){ const sg=g.createLinearGradient(fx-W*0.5,0,fx+W*0.5,0); sg.addColorStop(0,'rgba(0,0,0,0)'); sg.addColorStop(0.5,`rgba(${Math.round(cr*0.7)},${Math.round(cg*0.85)},255,${0.55*A*P('fstreak')})`); sg.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=sg; g.fillRect(0,fy-sz*0.02,W,sz*0.04); }
+      g.restore(); drawFlare(g,fx,fy,W,H,{rgb,k:1.5},A,P('fghost')); break; }
+    case 'adjust':{ g.filter=filterStr(c.f,0,u); g.drawImage(src,0,0); g.filter='none'; const f=c.f;
       if(f.tintAmt>0){ g.globalCompositeOperation='soft-light'; g.globalAlpha=clamp(f.tintAmt/100*1.5,0,1); g.fillStyle=f.tint; g.fillRect(0,0,W,H); g.globalCompositeOperation='source-over'; g.globalAlpha=1; }
       if(f.vignette>0){ const r1=Math.hypot(W,H)/2; const vg=g.createRadialGradient(W/2,H/2,r1*0.4,W/2,H/2,r1); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,0,${f.vignette/100})`); g.fillStyle=vg; g.fillRect(0,0,W,H); } break; }
     default: g.drawImage(src,0,0);
@@ -1174,7 +1242,6 @@ function render(t){
   if(S.settings.bgMode==='blur'){ const b=act.find(c=>c.type==='video'||c.type==='image'); if(b) drawBlurBg(b,W,H); }
   let flash=0;
   let batch=[];
-  const is3dItem=c=>c.type==='model' || (c.is3d && ['video','image','text','shape'].includes(c.type) && !(c.type==='shape'&&c.shape==='bg'));
   const items=act.filter(c=>c.type!=='camera').map(c=>{ const lt=t-c.start; return {c,lt,st:animState(c,lt,W,H)}; });
   const all3d=items.filter(it=>is3dItem(it.c));
   const flush=()=>{ if(batch.length){ const occ=all3d.length>batch.length?all3d.filter(it=>!batch.includes(it)):null; render3D(batch,W,H,t,null,null,null,occ); batch=[]; } };
@@ -1186,6 +1253,14 @@ function render(t){
   if(flash>0){ ctx.globalAlpha=flash; ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
   if(!S.exporting) drawOverlay(W,H);
   if(S.split && !S.exporting) renderView2(t);
+}
+function drawLightIcon(g,x,y,col,sel,k){ g.save(); g.lineWidth=1.6*k; g.strokeStyle=sel?'#ffffff':'rgba(255,255,255,.75)'; g.fillStyle=col;
+  g.beginPath(); g.arc(x,y,6*k,0,Math.PI*2); g.fill(); g.stroke();
+  for(let i=0;i<8;i++){ const a=i*Math.PI/4; g.beginPath(); g.moveTo(x+Math.cos(a)*9*k,y+Math.sin(a)*9*k); g.lineTo(x+Math.cos(a)*13*k,y+Math.sin(a)*13*k); g.stroke(); } g.restore(); }
+function drawLightGuides(g,W,H,t,cam,proj,k){
+  for(const c of visibleClipsAt(t)){ if(c.type!=='light') continue; const lt=t-c.start, st=animState(c,lt,W,H), L=lightParams(c,st,lt,W,H), p=proj(L.pos); if(!p) continue;
+    if(L.spot){ const e=L.range*0.25, q=proj([L.pos[0]+L.dir[0]*e,L.pos[1]+L.dir[1]*e,L.pos[2]+L.dir[2]*e]); if(q){ g.save(); g.strokeStyle=c.lColor; g.lineWidth=1.5*k; g.setLineDash([5*k,4*k]); g.beginPath(); g.moveTo(p[0],p[1]); g.lineTo(q[0],q[1]); g.stroke(); g.restore(); } }
+    drawLightIcon(g,p[0],p[1],c.lColor,isSel(c.id),k); }
 }
 function drawOverlay(W,H){
   const lw=Math.max(2,W/640);
@@ -1199,6 +1274,7 @@ function drawOverlay(W,H){
     ctx.fillStyle='#ffd400'; for(const kt of kfTimes(sc)){ const P=xf(sc,kt); ctx.save(); ctx.translate(W/2+P.x*W,H/2+P.y*H); ctx.rotate(Math.PI/4); ctx.fillRect(-lw*3,-lw*3,lw*6,lw*6); ctx.restore(); }
     ctx.restore();
   }
+  { const cam=cameraAt(S.t,W,H); drawLightGuides(ctx,W,H,S.t,cam,p=>{ const b=projBox(cam,W,H,p); return b?[b.x,b.y]:null; },W/960); }
   drawSel();
 }
 let renderQueued=false;
@@ -1320,19 +1396,32 @@ async function parseGLB(buf){
 }
 
 let G=null;
+const GLSL_NOISE=`
+float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float n2(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(h2(i),h2(i+vec2(1.0,0.0)),f.x),mix(h2(i+vec2(0.0,1.0)),h2(i+vec2(1.0,1.0)),f.x),f.y); }
+float fbm(vec2 p){ float s=0.0,a=0.5; for(int i=0;i<4;i++){ s+=a*n2(p); p*=2.03; a*=0.5; } return s; }`;
+const GLSL_LIGHTS=`
+uniform int uNL; uniform vec3 uLP[8]; uniform vec3 uLC[8]; uniform vec4 uLR[8]; uniform vec3 uLD[8];
+float lAtt(int i, vec3 wp, out vec3 Ld){ vec3 dv=uLP[i]-wp; float d=length(dv); Ld=dv/max(d,1e-4); float rr=max(uLR[i].x,1.0);
+  float w=clamp(1.0-pow(d/rr,4.0),0.0,1.0); float a=w*w/(1.0+pow(d/(rr*0.3),2.0)*uLR[i].y);
+  if(uLR[i].z>-1.5){ float cd=dot(-Ld,normalize(uLD[i])); a*=smoothstep(uLR[i].z,max(uLR[i].w,uLR[i].z+1e-3),cd); }
+  return a; }`;
 const LAYER_VS=`#version 300 es
-in vec2 aPos; uniform mat4 uMVP; out vec2 vUv;
-void main(){ vUv=vec2(aPos.x+0.5,0.5-aPos.y); gl_Position=uMVP*vec4(aPos,0.0,1.0); }`;
+in vec2 aPos; uniform mat4 uMVP; uniform mat4 uM; out vec2 vUv; out vec3 vW; out vec3 vN;
+void main(){ vUv=vec2(aPos.x+0.5,0.5-aPos.y); vec4 w=uM*vec4(aPos,0.0,1.0); vW=w.xyz; vN=mat3(uM)*vec3(0.0,0.0,1.0); gl_Position=uMVP*vec4(aPos,0.0,1.0); }`;
 const LAYER_FS=`#version 300 es
-precision highp float; in vec2 vUv; uniform sampler2D uTex; out vec4 o;
-void main(){ o=texture(uTex,vUv); if(o.a<0.002) discard; }`;
+precision highp float; in vec2 vUv; in vec3 vW; in vec3 vN; uniform sampler2D uTex; uniform int uLit; uniform float uDark; out vec4 o;
+${GLSL_LIGHTS}
+void main(){ o=texture(uTex,vUv); if(o.a<0.002) discard;
+  if(uLit==1){ vec3 N=normalize(vN); vec3 L=vec3(1.0-uDark); for(int i=0;i<8;i++){ if(i>=uNL) break; vec3 Ld; float a=lAtt(i,vW,Ld); L+=uLC[i]*a*(0.35+0.65*abs(dot(N,Ld))); } o.rgb*=L; } }`;
 const MESH_VS=`#version 300 es
 in vec3 aPos; in vec3 aNor; in vec2 aUv; uniform mat4 uModel,uView,uProj; out vec3 vN; out vec3 vW; out vec2 vUv;
 void main(){ vec4 w=uModel*vec4(aPos,1.0); vW=w.xyz; vN=mat3(uModel)*aNor; vUv=aUv; gl_Position=uProj*uView*w; }`;
 const MESH_FS=`#version 300 es
 precision highp float; in vec3 vN; in vec3 vW; in vec2 vUv;
 uniform vec4 uColor; uniform sampler2D uTex; uniform int uHasTex; uniform int uWire;
-uniform vec3 uLDir; uniform vec3 uLCol; uniform float uAmb; uniform vec3 uCam; uniform float uRough; uniform float uMetal; uniform float uEmis;
+uniform vec3 uLDir; uniform vec3 uLCol; uniform float uAmb; uniform vec3 uCam; uniform float uRough; uniform float uMetal; uniform float uEmis; uniform float uDark;
+${GLSL_LIGHTS}
 out vec4 o;
 void main(){
   vec4 base=uColor; if(uHasTex==1) base*=texture(uTex,vUv);
@@ -1341,10 +1430,74 @@ void main(){
   vec3 L=normalize(uLDir), V=normalize(uCam-vW), Hh=normalize(L+V);
   float diff=max(dot(N,L),0.0); float fill=max(dot(N,-L*vec3(1.0,-0.3,1.0)),0.0)*0.25;
   float sh=mix(96.0,4.0,uRough); float spec=pow(max(dot(N,Hh),0.0),sh)*(1.0-uRough*0.85);
-  float rim=pow(1.0-max(dot(N,V),0.0),3.0)*0.15;
-  vec3 col=base.rgb*(uAmb+(diff+fill)*uLCol*(1.0-uMetal*0.6)) + spec*mix(vec3(1.0),base.rgb,uMetal)*uLCol + rim*uLCol + base.rgb*uEmis;
+  float rim=pow(1.0-max(dot(N,V),0.0),3.0)*0.15; float k=1.0-uDark;
+  vec3 col=(base.rgb*(uAmb+(diff+fill)*uLCol*(1.0-uMetal*0.6)) + spec*mix(vec3(1.0),base.rgb,uMetal)*uLCol + rim*uLCol)*k + base.rgb*uEmis;
+  for(int i=0;i<8;i++){ if(i>=uNL) break; vec3 Ld; float a=lAtt(i,vW,Ld); if(a<=0.0) continue;
+    float df=max(dot(N,Ld),0.0); vec3 H2=normalize(Ld+V); float sp=pow(max(dot(N,H2),0.0),sh)*(1.0-uRough*0.85);
+    col+=(base.rgb*df*(1.0-uMetal*0.6)+sp*mix(vec3(1.0),base.rgb,uMetal))*uLC[i]*a; }
   o=vec4(col*base.a,base.a);
 }`;
+const PART_VS=`#version 300 es
+layout(location=0) in vec2 aQ; layout(location=1) in vec3 iPos; layout(location=2) in vec3 iVel; layout(location=3) in vec4 iCol; layout(location=4) in vec3 iP;
+uniform mat4 uView,uProj; uniform float uStretch; uniform int uLit; uniform float uAmb; uniform float uPull;
+${GLSL_LIGHTS}
+out vec2 vQ; out vec4 vCol; out float vAux;
+void main(){
+  vec4 c=uView*vec4(iPos,1.0); vec3 vv=mat3(uView)*iVel; float s=iP.x;
+  vec2 ax=vec2(cos(iP.y),sin(iP.y)); float len=s;
+  if(uStretch>0.0){ float sp=length(vv.xy); if(sp>1e-3){ ax=vv.xy/sp; len=s+uStretch*sp*0.03; } }
+  vec2 ay=vec2(-ax.y,ax.x);
+  vQ=aQ; vAux=iP.z; vec3 col=iCol.rgb;
+  if(uLit==1){ vec3 L=vec3(uAmb); for(int i=0;i<8;i++){ if(i>=uNL) break; vec3 Ld; float a=lAtt(i,iPos,Ld); L+=uLC[i]*a*0.8; } col*=L; }
+  vCol=vec4(col,iCol.a);
+  if(uPull>0.0){ float d=length(c.xyz); c.xyz*=max(0.05,1.0-uPull*s/max(d,1.0)); s*=max(0.05,1.0-uPull*s/max(d,1.0)); len=s; }
+  gl_Position=uProj*vec4(c.xy+ax*aQ.x*len+ay*aQ.y*s,c.z,1.0);
+}`;
+const PART_FS=`#version 300 es
+precision highp float; in vec2 vQ; in vec4 vCol; in float vAux;
+uniform int uShape; uniform sampler2D uTex; uniform vec4 uLA; uniform vec4 uLB; out vec4 o;
+${GLSL_NOISE}
+void main(){
+  vec2 q=vQ; float r=length(q); float a=0.0; vec3 col=vCol.rgb; float hot=0.0;
+  if(uShape==0){ a=exp(-r*r*4.5)*(1.0-smoothstep(0.85,1.0,r)); hot=exp(-r*r*30.0)*0.6; }
+  else if(uShape==1){ vec2 p=q; float n=fbm(p*vec2(2.0,1.4)+vec2(vAux*17.0,-vAux*9.0)); float m=fbm(p*4.5-vec2(vAux*5.0,vAux*23.0));
+    p.x+=(n-0.5)*0.45; float w=mix(1.0,0.55,clamp(p.y*0.5+0.5,0.0,1.0)); float d=length(vec2(p.x/w,p.y*0.9));
+    a=smoothstep(1.0,0.1,d)*(0.45+0.75*n)*(0.8+0.4*m); a=clamp(a*a*1.5,0.0,1.0); hot=smoothstep(0.45,0.0,d)*0.35; }
+  else if(uShape==2){ float n=fbm(q*1.6+vAux*31.0); float m=fbm(q*3.7-vAux*13.0);
+    a=smoothstep(1.0,0.15,r+(n-0.5)*0.6)*clamp(0.15+1.1*n*n+0.2*m,0.0,1.0); col*=0.72+0.45*m; }
+  else if(uShape==3){ a=exp(-q.y*q.y*10.0)*smoothstep(1.0,0.2,abs(q.x)); hot=exp(-q.y*q.y*40.0)*smoothstep(1.0,0.4,abs(q.x))*0.8; }
+  else if(uShape==4){ a=1.0-smoothstep(0.82,1.0,r); }
+  else if(uShape==5){ float core=exp(-r*r*14.0); float cr=exp(-abs(q.x)*18.0)*exp(-abs(q.y)*2.2)+exp(-abs(q.y)*18.0)*exp(-abs(q.x)*2.2);
+    a=clamp(core+cr*0.85,0.0,1.0); hot=core*0.8; }
+  else if(uShape==6){ float ring=smoothstep(0.72,0.93,r)*(1.0-smoothstep(0.94,1.0,r)); vec2 hp=q-vec2(-0.38,0.38); float hl=exp(-dot(hp,hp)*45.0);
+    a=ring*0.75+hl*0.9+0.06*(1.0-smoothstep(0.9,1.0,r)); hot=hl; }
+  else if(uShape==7){ float f=abs(vAux); if(abs(q.x)<0.9 && abs(q.y)<0.5*max(f,0.08)) a=1.0; col*=0.6+0.4*f; }
+  else if(uShape==8){ a=exp(-q.y*q.y*25.0)*smoothstep(1.0,0.1,abs(q.x)); }
+  else if(uShape==9){ a=pow(clamp(1.0-r,0.0,1.0),1.4); hot=exp(-r*r*20.0)*0.3; }
+  else if(uShape==10){ float disk=1.0-smoothstep(0.86,0.98,r); a=disk*(0.45+0.55*smoothstep(0.55,0.95,r)); }
+  else if(uShape==11){ vec4 tx=texture(uTex,vec2(q.x*0.5+0.5,0.5-q.y*0.5)); o=tx*vCol.a; if(o.a<0.003) discard; return; }
+  else if(uShape==20){
+    float rg=r/max(uLB.z,1e-3); float cr=max(uLA.x,0.004); float core=exp(-(rg*rg)/(cr*cr));
+    float halo=uLA.y*(exp(-rg*4.0)*0.8+exp(-rg*rg*40.0)*0.5)*(1.0-smoothstep(0.75,1.0,rg));
+    float ang=atan(q.y,q.x)+vAux; float nn=max(uLA.w,1.0); float seg=floor((ang/6.2832+0.5)*nn);
+    float rays=uLA.z*pow(abs(cos(ang*nn*0.5)),28.0)*(0.55+0.45*n2(vec2(seg*3.1,vAux*7.0)))*exp(-rg*2.2)*(1.0-smoothstep(0.85,1.0,rg));
+    float stk=uLB.x*exp(-abs(q.y)/max(uLB.y,0.002))*pow(max(0.0,1.0-abs(q.x)),1.5);
+    a=core+halo+rays+stk; a*=vCol.a; if(a<0.002) discard;
+    col=mix(col,vec3(1.0),clamp(core,0.0,1.0)*0.9); o=vec4(col*a,min(a,1.0)); return; }
+  a*=vCol.a; if(a<0.002) discard;
+  col=mix(col,vec3(1.0),clamp(hot,0.0,1.0)*0.85);
+  o=vec4(col*a,a);
+}`;
+const BEAM_VS=`#version 300 es
+layout(location=0) in vec3 aA; uniform mat4 uModel,uVP; out vec3 vW; out vec3 vN; out float vT;
+void main(){ vec3 p=vec3(aA.xy*aA.z,-aA.z); vec4 w=uModel*vec4(p,1.0); vW=w.xyz; vN=normalize(mat3(uModel)*vec3(aA.xy,0.0)); vT=aA.z; gl_Position=uVP*w; }`;
+const BEAM_FS=`#version 300 es
+precision highp float; in vec3 vW; in vec3 vN; in float vT; uniform vec3 uCol; uniform float uBeam; uniform vec3 uCam; uniform float uTime; out vec4 o;
+${GLSL_NOISE}
+void main(){ vec3 V=normalize(uCam-vW); float f=pow(abs(dot(normalize(vN),V)),1.3);
+  float a=uBeam*pow(1.0-vT,1.6)*f*smoothstep(0.0,0.06,vT)*(0.8+0.2*fbm(vW.xy*0.004+vec2(uTime*0.15,uTime*0.05)));
+  o=vec4(uCol*a,a); }`;
+
 function glProg(gl,vs,fs){
   const sh=(t,src)=>{ const s=gl.createShader(t); gl.shaderSource(s,src); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
   const p=gl.createProgram(); gl.attachShader(p,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p);
@@ -1358,12 +1511,23 @@ function ensureGL(W,H){
     try{
       const c=document.createElement('canvas'); c.width=W; c.height=H;
       const gl=c.getContext('webgl2',{alpha:true,premultipliedAlpha:true,antialias:true,preserveDrawingBuffer:true}); if(!gl) throw new Error('kein WebGL2');
-      const lp=glProg(gl,LAYER_VS,LAYER_FS), mp=glProg(gl,MESH_VS,MESH_FS);
+      const lp=glProg(gl,LAYER_VS,LAYER_FS), mp=glProg(gl,MESH_VS,MESH_FS), pp=glProg(gl,PART_VS,PART_FS), bp=glProg(gl,BEAM_VS,BEAM_FS);
       const qv=gl.createVertexArray(); gl.bindVertexArray(qv); const qb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,qb);
       gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5]),gl.STATIC_DRAW);
       gl.enableVertexAttribArray(lp.a.pos); gl.vertexAttribPointer(lp.a.pos,2,gl.FLOAT,false,0,0); gl.bindVertexArray(null);
       const white=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,white); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
-      G={c,gl,lp,mp,qv,white,meshes:new Map(),layerTex:new Map(),layerCv:new Map()};
+      /* Partikel: Quad + Instanz-Daten */
+      const pvao=gl.createVertexArray(); gl.bindVertexArray(pvao); const pqb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,pqb);
+      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+      const pib=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,pib); gl.bufferData(gl.ARRAY_BUFFER,13*4*16,gl.DYNAMIC_DRAW);
+      for(const [loc,n,off] of [[1,3,0],[2,3,12],[3,4,24],[4,3,40]]){ gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,n,gl.FLOAT,false,52,off); gl.vertexAttribDivisor(loc,1); }
+      gl.bindVertexArray(null);
+      /* Lichtkegel */
+      const SEG=64, cone=[]; for(let i=0;i<SEG;i++){ const a0=i/SEG*Math.PI*2, a1=(i+1)/SEG*Math.PI*2, am=(a0+a1)/2;
+        cone.push(Math.cos(am),Math.sin(am),0, Math.cos(a0),Math.sin(a0),1, Math.cos(a1),Math.sin(a1),1); }
+      const bvao=gl.createVertexArray(); gl.bindVertexArray(bvao); const bb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,bb); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(cone),gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0); gl.bindVertexArray(null);
+      G={c,gl,lp,mp,pp,bp,qv,white,pvao,pib,bvao,bn:SEG*3,emoji:new Map(),meshes:new Map(),layerTex:new Map(),layerCv:new Map()};
     }catch(e){ console.warn('3D nicht verfügbar:',e.message); G={fail:true}; return null; }
   }
   if(G.c.width!==W||G.c.height!==H){ G.c.width=W; G.c.height=H; }
@@ -1394,8 +1558,8 @@ function meshFor(E,c){
   E.meshes.set(key,ms); return ms;
 }
 const CAM_KEYS=['orbitY','orbitX','dist','panX','panY','roll','fov'];
-function cameraAt(t,W,H){
-  let cam=null; for(const c of visibleClipsAt(t)) if(c.type==='camera') cam=c;
+function cameraAt(t,W,H,noClip){
+  let cam=null; if(!noClip) for(const c of visibleClipsAt(t)) if(c.type==='camera') cam=c;
   const lt=cam?t-cam.start:0, g=k=>cam?kv(cam,k,lt):({orbitY:0,orbitX:0,dist:1,panX:0,panY:0,roll:0,fov:50})[k];
   let shx=0,shy=0; if(cam && cam.camShake>0){ const sd=hashStr(cam.id); shx=vnoise(lt*3,sd)*cam.camShake*0.4; shy=vnoise(lt*3,sd+3)*cam.camShake*0.4; }
   const D0=(H/2)/Math.tan(25*Math.PI/180), fov=clamp(g('fov'),5,150)*Math.PI/180;
@@ -1410,19 +1574,47 @@ function projBox(cam,W,H,p){ const q=M4.apply(cam.vp,[p[0],p[1],p[2],1]); if(q[3
 function flatProxy(c){ const p=Object.create(c); p.x=0; p.y=0; p.rotation=0; p.parent=''; p.wigA=0; p.wigR=0; p.autoOrient=false; p.dshadow=c.dshadow;
   if(c.kf){ const k={...c.kf}; delete k.x; delete k.y; delete k.rotation; p.kf=k; } return p; }
 function lightDir(){ const L=S.settings.light||{}; const az=(L.az??-35)*Math.PI/180, el=(L.el??40)*Math.PI/180; return [Math.cos(el)*Math.sin(az),Math.sin(el),Math.cos(el)*Math.cos(az)]; }
+const LAYER_TYPES=['video','image','text','shape'];
+function emojiTex(E,em){ let t=E.emoji.get(em); if(t) return t; const gl=E.gl, c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d');
+  g.font='104px system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(em||'❤️',64,70);
+  t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c); gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false); E.emoji.set(em,t); return t; }
+function drawFlare(oc,x,y,W,H,L,amt,ghosts){
+  const sx=oc.canvas.width/W, sy=oc.canvas.height/H, cx=W/2, cy=H/2, dx=cx-x, dy=cy-y;
+  const ex=Math.max(Math.abs(x/W-0.5),Math.abs(y/H-0.5))*2, f=amt*clamp(1.35-ex,0,1)*clamp(L.k/1.5,0,1.4); if(f<=0.01) return;
+  const [r,g,b]=L.rgb.map(v=>Math.round(v*255)), tints=[[255,170,90],[120,200,255],[200,140,255],[140,255,170],[255,120,150]];
+  const G=[[0.32,0.045],[0.55,0.022],[0.78,0.08],[1.05,0.035],[1.3,0.12],[1.55,0.05],[1.8,0.028],[2.05,0.09],[2.3,0.04],[2.6,0.06]].slice(0,Math.max(1,Math.round(ghosts)));
+  oc.save(); oc.setTransform(sx,0,0,sy,0,0); oc.globalCompositeOperation='lighter';
+  G.forEach(([k,s],i)=>{ const px=x+dx*k, py=y+dy*k, rad=s*W, t=tints[i%tints.length]; const cr=Math.round((r+t[0])/2), cg=Math.round((g+t[1])/2), cb=Math.round((b+t[2])/2);
+    const gr=oc.createRadialGradient(px,py,0,px,py,rad); const a=f*(i%3===0?0.16:0.11);
+    if(i%2){ gr.addColorStop(0,`rgba(${cr},${cg},${cb},${a*0.4})`); gr.addColorStop(0.75,`rgba(${cr},${cg},${cb},${a})`); gr.addColorStop(1,`rgba(${cr},${cg},${cb},0)`); }
+    else { gr.addColorStop(0,`rgba(${cr},${cg},${cb},${a})`); gr.addColorStop(1,`rgba(${cr},${cg},${cb},0)`); }
+    oc.fillStyle=gr; oc.beginPath(); oc.arc(px,py,rad,0,Math.PI*2); oc.fill(); });
+  const hr=Math.hypot(dx,dy)*0.9+W*0.05, hg=oc.createRadialGradient(cx,cy,hr*0.92,cx,cy,hr*1.05);
+  hg.addColorStop(0,'rgba(0,0,0,0)'); hg.addColorStop(0.5,`rgba(${r},${g},${b},${0.05*f})`); hg.addColorStop(1,'rgba(0,0,0,0)'); oc.fillStyle=hg; oc.fillRect(0,0,W,H);
+  oc.restore();
+}
 function render3D(items,W,H,t,camOv,outCtx,planes,occ){
   const E=ensureGL(W,H);
-  if(!E){ if(!camOv) for(const it of items) if(it.c.type!=='model') draw2D(it.c,it.st,W,H,it.lt); return; }
-  const gl=E.gl, cam=camOv||cameraAt(t,W,H);
+  if(!E){ if(!camOv) for(const it of items){ if(it.c.type==='particles') drawParticlesFallback(it.c,it.st,W,H,it.lt); else if(LAYER_TYPES.includes(it.c.type)) draw2D(it.c,it.st,W,H,it.lt); } return; }
+  const gl=E.gl, cam=camOv||cameraAt(t,W,H), oc=outCtx||ctx;
   gl.viewport(0,0,W,H); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(true);
   const mn=Math.min(W,H);
+  /* Lichter sammeln (auch aus anderen Ebenen-Gruppen, damit alles gleich beleuchtet ist) */
+  const all=occ?items.concat(occ):items, Ls=[];
+  for(const it of all){ if(it.c.type==='light'){ const L=lightParams(it.c,it.st,it.lt,W,H); L.mine=items.includes(it); Ls.push(L); } else if(it.c.type==='particles'&&it.c.is3d){ const pl=partLight(it.c,it.st,it.lt,W,H); if(pl) Ls.push(pl); } }
+  const objL=Ls.filter(l=>l.obj).slice(0,8), layL=Ls.filter(l=>l.layers).slice(0,8), dark=Ls.reduce((m,l)=>Math.max(m,l.dark||0),0);
+  const setL=(prog,list)=>{ const u=prog.u; gl.uniform1i(u.uNL||null,list.length); if(!list.length) return;
+    const P=new Float32Array(24),C=new Float32Array(24),R=new Float32Array(32),Dd=new Float32Array(24);
+    list.forEach((l,i)=>{ P.set(l.pos,i*3); C.set(l.col,i*3); R.set([l.range,l.decay??1,l.cosO,l.cosI],i*4); Dd.set(l.dir||[0,0,-1],i*3); });
+    gl.uniform3fv(u['uLP[0]']||null,P); gl.uniform3fv(u['uLC[0]']||null,C); gl.uniform4fv(u['uLR[0]']||null,R); gl.uniform3fv(u['uLD[0]']||null,Dd); };
   /* models */
   const drawModels=(models,setBox)=>{ if(!models.length) return;
     const mp=E.mp, L=S.settings.light||{}; gl.useProgram(mp.p); gl.depthMask(true);
     gl.uniformMatrix4fv(mp.u.uView,false,cam.view); gl.uniformMatrix4fv(mp.u.uProj,false,cam.proj);
     gl.uniform3fv(mp.u.uLDir,lightDir()); const lc=hexToRgb(L.col||'#ffffff').map(v=>v/255*(L.int??1.1)); gl.uniform3fv(mp.u.uLCol,lc);
-    gl.uniform1f(mp.u.uAmb,L.amb??0.35); gl.uniform3fv(mp.u.uCam,cam.pos); gl.uniform1i(mp.u.uTex,0);
+    gl.uniform1f(mp.u.uAmb,L.amb??0.35); gl.uniform3fv(mp.u.uCam,cam.pos); gl.uniform1i(mp.u.uTex,0); gl.uniform1f(mp.u.uDark||null,dark); setL(mp,objL);
     for(const it of models){ const c=it.c, st=it.st, lt=it.lt, X=xf(c,lt);
       const ms=meshFor(E,c); if(!ms) continue;
       const s=X.sc*st.k*mn*0.32, px=X.x*W+st.dx, py=-(X.y*H+st.dy), pz=kv(c,'z',lt)*W;
@@ -1441,101 +1633,240 @@ function render3D(items,W,H,t,camOv,outCtx,planes,occ){
     }
     gl.bindVertexArray(null);
   };
-  /* 3D layers */
+  /* 3D-Ebenen (Video, Bild, Text, Form) */
   const makeLayers=(list,setBox)=>{ const layers=[];
-  for(const it of list){ if(it.c.type==='model') continue; const c=it.c, st=it.st, lt=it.lt, X=xf(c,lt);
-    let lc=E.layerCv.get(c.id); if(!lc){ const cc=document.createElement('canvas'); lc={c:cc,g:cc.getContext('2d')}; E.layerCv.set(c.id,lc); }
-    if(lc.c.width!==W||lc.c.height!==H){ lc.c.width=W; lc.c.height=H; }
-    lc.g.setTransform(1,0,0,1,0,0); lc.g.clearRect(0,0,W,H);
-    const saved=ctx; ctx=lc.g; const fst=Object.assign({},st,{dx:0,dy:0,rot:0}); try{ draw2D(flatProxy(c),fst,W,H,lt); }finally{ ctx=saved; }
-    const fb=boxes.get(c.id);
-    const px=X.x*W+st.dx, py=-(X.y*H+st.dy), pz=kv(c,'z',lt)*W;
-    const M=M4.chain(M4.T(px,py,pz),M4.RY(kv(c,'ry',lt)*Math.PI/180),M4.RX(kv(c,'rx',lt)*Math.PI/180),M4.RZ(-(X.rot*Math.PI/180+st.rot)),M4.S(W,H,1));
-    const vz=M4.apply(cam.view,[px,py,pz,1])[2];
-    layers.push({c,M,vz,lc});
-    const pb=setBox&&projBox(cam,W,H,[px,py,pz]);
-    if(pb && fb){ const rx=kv(c,'rx',lt)*Math.PI/180, ry=kv(c,'ry',lt)*Math.PI/180; boxes.set(c.id,{cx:pb.x+(fb.cx-W/2)*pb.k,cy:pb.y+(fb.cy-H/2)*pb.k,w:fb.w*pb.k*Math.max(0.15,Math.abs(Math.cos(ry))),h:fb.h*pb.k*Math.max(0.15,Math.abs(Math.cos(rx))),rot:fb.rot+X.rot*Math.PI/180}); }
-  }
-  return layers; };
+    for(const it of list){ if(!LAYER_TYPES.includes(it.c.type)) continue; const c=it.c, st=it.st, lt=it.lt, X=xf(c,lt);
+      let lc=E.layerCv.get(c.id); if(!lc){ const cc=document.createElement('canvas'); lc={c:cc,g:cc.getContext('2d')}; E.layerCv.set(c.id,lc); }
+      if(lc.c.width!==W||lc.c.height!==H){ lc.c.width=W; lc.c.height=H; }
+      lc.g.setTransform(1,0,0,1,0,0); lc.g.clearRect(0,0,W,H);
+      const saved=ctx; ctx=lc.g; const fst=Object.assign({},st,{dx:0,dy:0,rot:0}); try{ draw2D(flatProxy(c),fst,W,H,lt); }finally{ ctx=saved; }
+      const fb=boxes.get(c.id);
+      const px=X.x*W+st.dx, py=-(X.y*H+st.dy), pz=kv(c,'z',lt)*W;
+      const M=M4.chain(M4.T(px,py,pz),M4.RY(kv(c,'ry',lt)*Math.PI/180),M4.RX(kv(c,'rx',lt)*Math.PI/180),M4.RZ(-(X.rot*Math.PI/180+st.rot)),M4.S(W,H,1));
+      const vz=M4.apply(cam.view,[px,py,pz,1])[2];
+      layers.push({c,M,vz,lc,lit:true});
+      const pb=setBox&&projBox(cam,W,H,[px,py,pz]);
+      if(pb && fb){ const rx=kv(c,'rx',lt)*Math.PI/180, ry=kv(c,'ry',lt)*Math.PI/180; boxes.set(c.id,{cx:pb.x+(fb.cx-W/2)*pb.k,cy:pb.y+(fb.cy-H/2)*pb.k,w:fb.w*pb.k*Math.max(0.15,Math.abs(Math.cos(ry))),h:fb.h*pb.k*Math.max(0.15,Math.abs(Math.cos(rx))),rot:fb.rot+X.rot*Math.PI/180}); }
+    }
+    return layers; };
   const drawLayers=(layers,writeDepth)=>{ if(!layers.length) return;
     layers.sort((a,b)=>a.vz-b.vz);
     const lp=E.lp; gl.useProgram(lp.p); gl.depthMask(!!writeDepth); gl.bindVertexArray(E.qv); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(lp.u.uTex,0);
+    gl.uniform1f(lp.u.uDark||null,dark); setL(lp,layL);
     for(const L of layers){
       let tx=E.layerTex.get(L.c.id); if(!tx){ tx=gl.createTexture(); E.layerTex.set(L.c.id,tx); }
       gl.bindTexture(gl.TEXTURE_2D,tx); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
       gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,L.lc.c); gl.generateMipmap(gl.TEXTURE_2D);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+      gl.uniform1i(lp.u.uLit||null,(L.lit&&layL.length)?1:0); gl.uniformMatrix4fv(lp.u.uM||null,false,L.M);
       gl.uniformMatrix4fv(lp.u.uMVP,false,M4.mul(cam.vp,L.M)); gl.drawArrays(gl.TRIANGLES,0,6);
     }
     gl.bindVertexArray(null); gl.depthMask(true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
   };
-  /* Objekte aus anderen Ebenen-Gruppen verdecken nur (Tiefe), werden aber nicht gezeichnet */
+  /* Partikel */
+  const sysN=[], sysA=[];
+  for(const it of items){ if(it.c.type!=='particles') continue; const R=partSystems(it.c,it.st,it.lt,W,H);
+    for(const s of R.systems) (s.ps.blend==='add'?sysA:sysN).push(s);
+    const pb=projBox(cam,W,H,R.org); if(pb){ const ps=R.ps, ext=['box','line'].includes(ps.emit)?ps.ew*W:(ps.emit==='point'?0:ps.ew*W*2); const w=Math.max(70,ext*pb.k*xf(it.c,it.lt).sc), h=Math.max(70,(ps.emit==='box'?ps.eh*W*pb.k:0));
+      boxes.set(it.c.id,{cx:pb.x,cy:pb.y,w,h,rot:0}); } }
+  const pp=E.pp, viewZ=p=>cam.view[2]*p[0]+cam.view[6]*p[1]+cam.view[10]*p[2]+cam.view[14];
+  const drawSys=(s)=>{ let D=s.D, n=s.n, ps=s.ps;
+    if(ps.blend!=='add' && n>1){ const idx=new Array(n); for(let i=0;i<n;i++) idx[i]=i; const z=new Float32Array(n); for(let i=0;i<n;i++) z[i]=viewZ([D[i*13],D[i*13+1],D[i*13+2]]);
+      idx.sort((a,b)=>z[a]-z[b]); const D2=new Float32Array(n*13); for(let i=0;i<n;i++) D2.set(D.subarray(idx[i]*13,idx[i]*13+13),i*13); D=D2; }
+    gl.bindBuffer(gl.ARRAY_BUFFER,E.pib); gl.bufferData(gl.ARRAY_BUFFER,D.subarray(0,n*13),gl.DYNAMIC_DRAW);
+    gl.uniform1f(pp.u.uStretch,ps.stretch||0); const sh=KIND_ID[ps.kind]??0; gl.uniform1i(pp.u.uShape,sh);
+    const lit=ps.blend!=='add'&&ps.lit&&objL.length; gl.uniform1i(pp.u.uLit||null,lit?1:0); gl.uniform1f(pp.u.uAmb||null,1-dark*0.85); gl.uniform1f(pp.u.uPull||null,0);
+    if(sh===11){ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,emojiTex(E,ps.emoji)); gl.uniform1i(pp.u.uTex,0); }
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP,0,4,n); };
+  const beginParts=()=>{ gl.useProgram(pp.p); gl.bindVertexArray(E.pvao); gl.depthMask(false);
+    gl.uniformMatrix4fv(pp.u.uView,false,cam.view); gl.uniformMatrix4fv(pp.u.uProj,false,cam.proj); setL(pp,objL); };
+  /* Ablauf: Verdecker -> Objekte -> Ebenen -> normale Partikel | Leucht-Durchgang (additiv) */
   if(occ&&occ.length){ gl.colorMask(false,false,false,false); drawModels(occ.filter(it=>it.c.type==='model'),false); const keep=new Map(boxes); drawLayers(makeLayers(occ,false),true); boxes.clear(); for(const [k,v] of keep) boxes.set(k,v); gl.colorMask(true,true,true,true); }
   drawModels(items.filter(it=>it.c.type==='model'),true);
   const layers=makeLayers(items,true);
-  if(planes) for(const pl of planes){ layers.push({c:{id:pl.id},M:pl.M,vz:M4.apply(cam.view,[0,0,0,1])[2],lc:{c:pl.canvas}}); }
-  drawLayers(layers,false);
-  const oc=outCtx||ctx; oc.save(); oc.setTransform(1,0,0,1,0,0); oc.globalAlpha=1; oc.globalCompositeOperation='source-over'; oc.filter='none'; oc.drawImage(E.c,0,0,oc.canvas.width,oc.canvas.height); oc.restore();
+  if(planes) for(const pl of planes){ layers.push({c:{id:pl.id},M:pl.M,vz:M4.apply(cam.view,[0,0,0,1])[2],lc:{c:pl.canvas},lit:false}); }
+  drawLayers(layers,true);
+  if(sysN.length){ beginParts(); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA); sysN.sort((a,b)=>viewZ(a.D)-viewZ(b.D)); for(const s of sysN) drawSys(s); gl.bindVertexArray(null); gl.depthMask(true); }
+  oc.save(); oc.setTransform(1,0,0,1,0,0); oc.globalAlpha=1; oc.globalCompositeOperation='source-over'; oc.filter='none'; oc.drawImage(E.c,0,0,oc.canvas.width,oc.canvas.height); oc.restore();
+  /* Leuchtende Dinge: Feuer, Funken, Lichtschein, Lichtkegel */
+  const myL=Ls.filter(l=>l.mine&&l.c);
+  const glowL=myL.filter(l=>l.k>0&&((l.c.lGlow>0&&l.c.lGlowSize>0)||l.c.lCore>0||l.c.lRays>0||l.c.lStreak>0)), beamL=myL.filter(l=>l.spot&&l.c.lBeam>0&&l.k>0);
+  if(sysA.length||glowL.length||beamL.length){
+    gl.clear(gl.COLOR_BUFFER_BIT); gl.blendFunc(gl.ONE,gl.ONE);
+    if(beamL.length){ const bp=E.bp; gl.useProgram(bp.p); gl.bindVertexArray(E.bvao); gl.depthMask(false);
+      gl.uniformMatrix4fv(bp.u.uVP,false,cam.vp); gl.uniform3fv(bp.u.uCam,cam.pos); gl.uniform1f(bp.u.uTime||null,t);
+      for(const l of beamL){ const len=l.range*0.85, rad=len*Math.tan(l.ang); const M=M4.mul(M4.T(l.pos[0],l.pos[1],l.pos[2]),M4.mul(l.R,M4.S(rad,rad,len)));
+        gl.uniformMatrix4fv(bp.u.uModel,false,M); gl.uniform3fv(bp.u.uCol,l.rgb.map(v=>v*Math.min(2,l.k*0.5))); gl.uniform1f(bp.u.uBeam,l.c.lBeam*0.5); gl.drawArrays(gl.TRIANGLES,0,E.bn); }
+      gl.bindVertexArray(null); }
+    if(sysA.length||glowL.length){ beginParts();
+      for(const s of sysA) drawSys(s);
+      for(const l of glowL){ const c=l.c, gs=Math.max(1,c.lGlowSize*W), ss=Math.max(gs,c.lStreak>0?(c.lStreakLen||0.6)*W:0);
+        const D=new Float32Array([l.pos[0],l.pos[1],l.pos[2],0,0,0,l.rgb[0],l.rgb[1],l.rgb[2],clamp(l.k*0.6,0,3),ss,0,(c.lRayRot||0)*Math.PI/180+(c.lRaySpin||0)*t*Math.PI/180]);
+        gl.bindBuffer(gl.ARRAY_BUFFER,E.pib); gl.bufferData(gl.ARRAY_BUFFER,D,gl.DYNAMIC_DRAW);
+        gl.uniform1f(pp.u.uStretch,0); gl.uniform1i(pp.u.uShape,20); gl.uniform1i(pp.u.uLit||null,0); gl.uniform1f(pp.u.uPull||null,0.25);
+        gl.uniform4f(pp.u.uLA,c.lCore,c.lGlow,c.lRays,c.lRayCount); gl.uniform4f(pp.u.uLB,c.lStreak,c.lStreakW,gs/ss,0);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP,0,4,1); }
+      gl.bindVertexArray(null); }
+    gl.depthMask(true); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+    oc.save(); oc.setTransform(1,0,0,1,0,0); oc.globalAlpha=1; oc.globalCompositeOperation='lighter'; oc.filter='none'; oc.drawImage(E.c,0,0,oc.canvas.width,oc.canvas.height); oc.restore();
+  }
+  /* Linsenreflexe */
+  for(const l of myL){ if(!(l.c.lFlare>0)||l.k<=0) continue; const p=projBox(cam,W,H,l.pos); if(p) drawFlare(oc,p.x,p.y,W,H,l,l.c.lFlare,l.c.lFlareN||7); }
+  /* Licht-Auswahlrahmen */
+  for(const l of myL){ const p=projBox(cam,W,H,l.pos); if(p) boxes.set(l.c.id,{cx:p.x,cy:p.y,w:W*0.05,h:W*0.05,rot:0}); }
 }
 
-/* ---------- Particles ---------- */
+/* ---------- Partikel (3D-Engine) ---------- */
+const PS_DEF={rate:100,burst:false,count:150,life:1.5,lifeVar:0.3,prewarm:false,delay:0,emit:'point',ew:0.05,eh:0.05,ed:0.05,
+  speed:0.3,speedVar:0.4,yaw:0,pitch:90,spread:30,grav:0,windX:0,windZ:0,drag:0,accel:0,turb:0,turbFreq:1,spin:0,spinVar:1,
+  kind:'soft',blend:'add',size:10,sizeVar:0.4,sizeEnd:1,stretch:0,cmode:'life',c1:'#ffffff',c2:'#ffffff',c3:'#ffffff',alpha:1,fadeIn:0.1,fadeOut:0.3,flicker:0,
+  emoji:'❤️',seed:0,oy:0,embers:0,smoke:0,light:false,lightInt:1,lightRange:0.6,lightCol:'#ff8a2a',lightFlicker:0.3,lit:true};
 const PARTICLES={
-  funken:{n:'Funken',e:'✨',rate:140,life:1.1,speed:0.55,spread:70,dir:90,grav:0.7,size:3,colors:['#ffd27a','#ff9a3c','#fff4c2'],shape:'line',emitter:'point',add:true},
-  schnee:{n:'Schnee',e:'❄️',rate:45,life:9,speed:0.06,spread:25,dir:-90,grav:0.015,size:6,sizeVar:0.7,colors:['#ffffff'],shape:'dot',emitter:'top',wobble:1,prewarm:true},
-  konfetti:{n:'Konfetti',e:'🎊',rate:100,life:4,speed:0.75,spread:40,dir:90,grav:0.55,size:12,colors:['#ff3d8b','#22e3d3','#ffd400','#7c5cff','#4ade80','#ff7a59'],shape:'confetti',emitter:'bottom',drag:1.2},
-  regen:{n:'Regen',e:'🌧️',rate:260,life:1.1,speed:1.7,spread:4,dir:-100,grav:0,size:2,colors:['#bcd4ff'],shape:'line',emitter:'top',alpha:0.6,prewarm:true},
-  blasen:{n:'Blasen',e:'🫧',rate:10,life:6,speed:0.12,spread:30,dir:90,grav:-0.01,size:22,sizeVar:0.8,colors:['#bfefff'],shape:'bubble',emitter:'bottom',wobble:1,prewarm:true},
-  glitzer:{n:'Glitzer',e:'⭐',rate:70,life:1.4,speed:0.03,spread:360,dir:90,grav:0,size:10,colors:['#ffffff','#fff2a8'],shape:'star',emitter:'area',twinkle:true,add:true,prewarm:true},
-  rauch:{n:'Rauch',e:'💨',rate:28,life:3.5,speed:0.12,spread:25,dir:90,grav:-0.03,size:60,grow:3,colors:['#9a9a9a'],shape:'soft',emitter:'point',alpha:0.22},
-  feuer:{n:'Feuer',e:'🔥',rate:110,life:0.9,speed:0.28,spread:28,dir:90,grav:-0.35,size:46,grow:-0.75,colors:['#ffdd55','#ff7a1a','#ff2a00'],shape:'soft',emitter:'point',add:true},
-  herzen:{n:'Herzen',e:'💕',rate:6,life:4,speed:0.16,spread:30,dir:90,grav:-0.01,size:42,colors:['#ff3d8b'],shape:'emoji',emoji:'❤️',emitter:'bottom',wobble:1},
-  bokeh:{n:'Bokeh',e:'🔆',rate:14,life:6,speed:0.025,spread:360,dir:90,grav:0,size:36,sizeVar:0.8,colors:['#ffe6b0','#ffffff','#ffb3d9'],shape:'soft',emitter:'area',alpha:0.4,add:true,prewarm:true},
-  explosion:{n:'Explosion',e:'💥',burst:true,count:160,life:1.6,speed:0.95,spread:360,dir:90,grav:0.45,size:5,colors:['#ffffff','#ffd27a','#ff7a1a'],shape:'dot',emitter:'point',add:true,drag:2},
-  sterne:{n:'Sternenfeld',e:'🌌',rate:90,life:2.5,speed:0.05,spread:360,dir:0,grav:0,size:2.5,colors:['#ffffff'],shape:'warp',emitter:'point',add:true,prewarm:true}
+  funken:{n:'Funken',e:'✨',ps:{rate:200,life:1.3,lifeVar:0.5,emit:'sphere',ew:0.01,speed:0.8,speedVar:0.6,pitch:75,spread:70,grav:1.1,drag:0.5,turb:0.04,turbFreq:3,kind:'spark',blend:'add',size:3.6,sizeVar:0.5,sizeEnd:0.25,stretch:1.1,c1:'#fffbe8',c2:'#ffc061',c3:'#ff4a00',fadeIn:0.02,fadeOut:0.5,flicker:0.35,light:true,lightInt:0.8,lightRange:0.35,lightCol:'#ffab4a'}},
+  feuer:{n:'Feuer',e:'🔥',ps:{rate:260,life:1.05,lifeVar:0.4,emit:'disc',ew:0.04,speed:0.1,speedVar:0.4,pitch:90,spread:8,grav:-1.0,drag:1.2,turb:0.2,turbFreq:2.6,spin:20,kind:'flame',blend:'add',size:46,sizeVar:0.35,sizeEnd:0.3,stretch:1.6,c1:'#ffcf73',c2:'#ff6410',c3:'#5a0a00',alpha:0.3,fadeIn:0.06,fadeOut:0.6,flicker:0.2,embers:0.5,smoke:0.45,light:true,lightInt:1.6,lightRange:0.9,lightCol:'#ff8a2a',lightFlicker:0.35}},
+  rauch:{n:'Rauch',e:'💨',ps:{rate:30,life:5.5,lifeVar:0.35,emit:'disc',ew:0.03,speed:0.13,speedVar:0.35,pitch:90,spread:30,grav:-0.035,drag:0.35,turb:0.38,turbFreq:0.5,windX:0.025,spin:18,kind:'smoke',blend:'normal',size:58,sizeVar:0.5,sizeEnd:4.5,c1:'#a8a8a8',c2:'#7c7c7c',c3:'#5a5a5a',alpha:0.28,fadeIn:0.12,fadeOut:0.6}},
+  explosion:{n:'Explosion',e:'💥',ps:{burst:true,count:170,life:1.6,lifeVar:0.45,emit:'sphere',ew:0.02,speed:0.85,speedVar:0.7,spread:360,grav:-0.12,drag:3.4,turb:0.15,turbFreq:1.5,spin:60,kind:'flame',blend:'add',size:75,sizeVar:0.5,sizeEnd:2.2,c1:'#ffe9b8',c2:'#ff7a1a',c3:'#3a0a00',alpha:0.38,fadeIn:0.01,fadeOut:0.55,embers:1,smoke:0.9,light:true,lightInt:4,lightRange:1.4,lightCol:'#ffb060',lightFlicker:0.1}},
+  glut:{n:'Glut',e:'🌋',ps:{rate:35,life:3,lifeVar:0.4,emit:'disc',ew:0.12,speed:0.18,speedVar:0.6,pitch:90,spread:40,grav:-0.06,drag:0.4,turb:0.25,turbFreq:1.2,kind:'soft',blend:'add',size:11,sizeVar:0.6,sizeEnd:0.3,c1:'#fff1c0',c2:'#ff8a1a',c3:'#ff2a00',fadeIn:0.05,fadeOut:0.5,flicker:0.5}},
+  magie:{n:'Magie',e:'🪄',ps:{rate:150,life:1.8,lifeVar:0.4,emit:'sphere',ew:0.06,speed:0.08,speedVar:0.6,spread:360,grav:-0.08,turb:0.2,turbFreq:1.5,kind:'star',blend:'add',size:16,sizeVar:0.6,sizeEnd:0.1,c1:'#ffffff',c2:'#b48cff',c3:'#3a7bff',fadeIn:0.1,fadeOut:0.6,flicker:0.6,light:true,lightInt:0.7,lightRange:0.4,lightCol:'#9c7bff'}},
+  schnee:{n:'Schnee',e:'❄️',ps:{rate:60,life:12,lifeVar:0.3,prewarm:true,emit:'box',ew:1.6,eh:0.02,ed:1.4,speed:0.07,speedVar:0.5,pitch:-90,spread:20,grav:0.012,drag:0.3,turb:0.12,turbFreq:0.45,spin:30,kind:'snow',blend:'normal',size:5.5,sizeVar:0.7,c1:'#ffffff',c2:'#f4f8ff',c3:'#e8f0ff',alpha:0.95,fadeIn:0.08,fadeOut:0.12,lit:false}},
+  regen:{n:'Regen',e:'🌧️',ps:{rate:700,life:1.1,lifeVar:0.2,prewarm:true,emit:'box',ew:1.8,eh:0.02,ed:1.4,speed:2.4,speedVar:0.2,pitch:-96,spread:3,grav:0.6,kind:'rain',blend:'normal',size:1.4,sizeVar:0.4,stretch:3.5,c1:'#d8e6ff',c2:'#d8e6ff',c3:'#d8e6ff',alpha:0.45,fadeIn:0.05,fadeOut:0.05,lit:false}},
+  nebel:{n:'Nebel',e:'🌫️',ps:{rate:5,life:14,lifeVar:0.3,prewarm:true,emit:'box',ew:1.6,eh:0.3,ed:1,speed:0.015,spread:360,windX:0.012,turb:0.05,turbFreq:0.2,spin:6,kind:'smoke',blend:'normal',size:420,sizeVar:0.4,sizeEnd:1.4,c1:'#c9d2dc',c2:'#c9d2dc',c3:'#c9d2dc',alpha:0.13,fadeIn:0.3,fadeOut:0.35}},
+  konfetti:{n:'Konfetti',e:'🎊',ps:{rate:110,life:4.5,lifeVar:0.3,emit:'box',ew:1.1,eh:0.02,ed:0.4,speed:1.25,speedVar:0.35,pitch:90,spread:38,grav:0.75,drag:1.5,turb:0.18,turbFreq:0.8,spin:540,kind:'confetti',blend:'normal',size:11,sizeVar:0.4,cmode:'random',c1:'#ff3d8b',c2:'#22e3d3',c3:'#ffd400',fadeIn:0.02,fadeOut:0.15,lit:false}},
+  glitzer:{n:'Glitzer',e:'⭐',ps:{rate:80,life:1.6,lifeVar:0.4,prewarm:true,emit:'box',ew:0.8,eh:0.5,ed:0.4,speed:0.02,spread:360,turb:0.03,kind:'star',blend:'add',size:24,sizeVar:0.6,sizeEnd:0.4,c1:'#ffffff',c2:'#fff4b0',c3:'#ffd27a',fadeIn:0.25,fadeOut:0.5,flicker:0.9}},
+  staub:{n:'Staub im Licht',e:'🌤️',ps:{rate:20,life:9,lifeVar:0.3,prewarm:true,emit:'box',ew:1.3,eh:0.9,ed:0.8,speed:0.008,spread:360,turb:0.04,turbFreq:0.25,kind:'soft',blend:'add',size:6,sizeVar:0.7,c1:'#fff6e0',c2:'#fff6e0',c3:'#fff6e0',alpha:0.75,fadeIn:0.3,fadeOut:0.3,flicker:0.3}},
+  blasen:{n:'Blasen',e:'🫧',ps:{rate:9,life:8,lifeVar:0.3,prewarm:true,emit:'box',ew:1.1,eh:0.02,ed:0.5,speed:0.11,speedVar:0.5,pitch:90,spread:18,grav:-0.004,turb:0.25,turbFreq:0.5,kind:'bubble',blend:'normal',size:22,sizeVar:0.7,c1:'#e6fbff',c2:'#e6fbff',c3:'#e6fbff',alpha:0.9,fadeIn:0.1,fadeOut:0.1,lit:false}},
+  herzen:{n:'Herzen',e:'💕',ps:{rate:6,life:4.5,emit:'box',ew:1,eh:0.02,ed:0.3,speed:0.17,speedVar:0.3,pitch:90,spread:24,turb:0.18,turbFreq:0.6,spin:20,kind:'emoji',emoji:'❤️',blend:'normal',size:40,sizeVar:0.4,sizeEnd:1.15,fadeIn:0.1,fadeOut:0.25,lit:false}},
+  bokeh:{n:'Bokeh',e:'🔆',ps:{rate:14,life:7,prewarm:true,emit:'box',ew:1.3,eh:0.9,ed:0.9,speed:0.02,spread:360,turb:0.08,turbFreq:0.3,kind:'bokeh',blend:'add',size:42,sizeVar:0.8,cmode:'random',c1:'#ffe6b0',c2:'#ffffff',c3:'#ffb3d9',alpha:0.32,fadeIn:0.3,fadeOut:0.4,flicker:0.15}},
+  sterne:{n:'Sternenfeld',e:'🌌',ps:{rate:120,life:2.5,prewarm:true,emit:'sphere',ew:0.02,speed:0.05,speedVar:0.5,spread:360,accel:2.2,kind:'spark',blend:'add',size:2.4,sizeVar:0.4,sizeEnd:2,stretch:4,c1:'#ffffff',c2:'#dfe8ff',c3:'#ffffff',fadeIn:0.2,fadeOut:0.1}}
 };
+const PART_POS={funken:0.3,feuer:0.3,rauch:0.3,glut:0.3,schnee:-0.62,regen:-0.62,konfetti:0.62,blasen:0.62,herzen:0.62,nebel:0.3};
+const PART_KINDS=[['soft','Weicher Punkt'],['flame','Flamme'],['smoke','Rauch / Wolke'],['spark','Funke (Streifen)'],['dot','Harter Punkt'],['star','Stern / Glitzer'],['bubble','Blase'],['confetti','Konfetti'],['rain','Regentropfen'],['snow','Schneeflocke'],['bokeh','Bokeh-Kreis'],['emoji','Emoji']];
+const KIND_ID={soft:0,flame:1,smoke:2,spark:3,dot:4,star:5,bubble:6,confetti:7,rain:8,snow:9,bokeh:10,emoji:11};
+const EMITS=[['point','Punkt'],['sphere','Kugel'],['box','Box (Fläche/Raum)'],['disc','Scheibe (Boden)'],['ring','Ring'],['line','Linie']];
+function psFor(c){
+  if(!c.ps){ const P=PARTICLES[c.pPreset]||PARTICLES.funken; const ps=Object.assign({},PS_DEF,P.ps);
+    /* alte Projekte: frühere Regler übernehmen */
+    const am=c.pAmount??1; ps.rate*=am; ps.count=Math.round(ps.count*am); ps.size*=(c.pSize??1); ps.speed*=(c.pSpeed??1); ps.grav*=(c.pGrav??1); ps.life*=(c.pLife??1); ps.windX+=(c.pWind||0)*0.3;
+    if(c.pColorOn){ ps.c1=ps.c2=ps.c3=c.pColor; } if(c.pPrewarm) ps.prewarm=true;
+    const em={point:'point',line:'line',top:'box',bottom:'box',area:'box'}[c.pEmitter]; if(em) ps.emit=em;
+    if(c.pEmitter==='area'){ ps.ew=1.1; ps.eh=0.65; ps.ed=0.3; }
+    if(c.pAmount!=null && !c.is3d && PART_POS[c.pPreset]!=null && ['schnee','regen','konfetti','blasen','herzen'].includes(c.pPreset) && (c.pEmitter||'auto')==='auto') ps.oy=-PART_POS[c.pPreset]+(c.y||0);
+    c.ps=ps; }
+  else for(const k in PS_DEF) if(c.ps[k]===undefined) c.ps[k]=PS_DEF[k];
+  return c.ps;
+}
+function psSubs(ps){
+  const out=[ps];
+  if(ps.embers>0){ const e=ps.burst?Object.assign({},PS_DEF,PARTICLES.funken.ps,{burst:true,count:Math.round(140*ps.embers),speed:1.1,life:1.8,spread:360,grav:0.8,drag:1.2,light:false,seed:ps.seed+11})
+      :Object.assign({},PS_DEF,PARTICLES.glut.ps,{rate:45*ps.embers,ew:Math.max(ps.ew,0.02)*1.3,seed:ps.seed+11}); out.push(e); }
+  if(ps.smoke>0){ const s=ps.burst?Object.assign({},PS_DEF,PARTICLES.rauch.ps,{burst:true,count:Math.round(45*ps.smoke),emit:'sphere',ew:0.05,speed:0.3,speedVar:0.6,spread:360,drag:1.6,size:120,sizeEnd:3,life:3.8,alpha:0.4,delay:0.12,c1:'#4a4440',c2:'#3a3633',c3:'#2a2725',seed:ps.seed+23})
+      :Object.assign({},PS_DEF,PARTICLES.rauch.ps,{rate:20*ps.smoke,ew:Math.max(ps.ew,0.02),oy:ps.size*0.0012*Math.max(0.3,ps.speed*4),size:ps.size*0.9,alpha:0.22*Math.min(1.5,ps.smoke+0.4),c1:'#6b6460',c2:'#55504c',c3:'#3d3a38',seed:ps.seed+23}); out.push(s); }
+  return out;
+}
+const MAXP=6000;
+const _rgbC=new Map(); function rgbF(h){ let v=_rgbC.get(h); if(!v){ v=hexToRgb(h||'#ffffff').map(x=>x/255); _rgbC.set(h,v); } return v; }
+function psMat(c,lt){ return M4.chain(M4.RY(kv(c,'ry',lt)*Math.PI/180),M4.RX(kv(c,'rx',lt)*Math.PI/180),M4.RZ(-(xf(c,lt).rot)*Math.PI/180)); }
+/* Simuliert ein Partikelsystem (zustandslos, immer gleich für dieselbe Zeit) */
+function simPS(ps,lt,org,R,sc,W,H,seed){
+  const t=lt-(ps.delay||0); if(t<0) return null;
+  const u=Math.min(W,H)/1080, life=Math.max(0.05,ps.life), lv=clamp(ps.lifeVar,0,0.95), maxL=life;
+  let i0,i1,rate=ps.rate;
+  if(ps.burst){ i0=0; i1=Math.min(MAXP,Math.round(ps.count))-1; if(t>maxL+0.05) return null; }
+  else { if(rate<=0) return null; i0=Math.ceil((t-maxL)*rate); if(!ps.prewarm) i0=Math.max(0,i0); i1=Math.floor(t*rate); if(i1-i0>MAXP) i0=i1-MAXP; }
+  if(i1<i0) return null;
+  const n0=i1-i0+1, D=new Float32Array(n0*13); let n=0;
+  const yaw=ps.yaw*Math.PI/180, pit=ps.pitch*Math.PI/180, bd=[Math.cos(pit)*Math.sin(yaw),Math.sin(pit),Math.cos(pit)*Math.cos(yaw)];
+  const dW=M4.apply(R,[bd[0],bd[1],bd[2],0]); let bx=dW[0],by=dW[1],bz=dW[2]; { const l=Math.hypot(bx,by,bz)||1; bx/=l; by/=l; bz/=l; }
+  let tx=Math.abs(by)<0.95?[0,1,0]:[1,0,0]; let ux=[by*tx[2]-bz*tx[1],bz*tx[0]-bx*tx[2],bx*tx[1]-by*tx[0]]; { const l=Math.hypot(...ux)||1; ux=ux.map(v=>v/l); }
+  const vx=[by*ux[2]-bz*ux[1],bz*ux[0]-bx*ux[2],bx*ux[1]-by*ux[0]];
+  const cosS=Math.cos(clamp(ps.spread,0,360)/2*Math.PI/180);
+  const cols=[rgbF(ps.c1),rgbF(ps.c2),rgbF(ps.c3)], spd=ps.speed*H, g=ps.grav*H, wx=ps.windX*H, wz=ps.windZ*H, tA=ps.turb*H*0.25, fq=ps.turbFreq, oyW=(ps.oy||0)*H;
+  const ew=ps.ew*W*sc, eh=ps.eh*W*sc, ed=ps.ed*W*sc;
+  const pos=(a,o,v,s1)=>{ let f; if(ps.accel>0) f=(Math.exp(ps.accel*a)-1)/ps.accel; else if(ps.drag>0) f=(1-Math.exp(-ps.drag*a))/ps.drag; else f=a;
+    let x=o[0]+v[0]*f+wx*a, y=o[1]+v[1]*f-0.5*g*a*a, z=o[2]+v[2]*f+wz*a;
+    if(tA>0){ const k=tA*Math.min(1,a*1.5); x+=k*(vnoise(a*fq,s1)+0.5*vnoise(a*fq*2.3,s1+3.1)); y+=k*(vnoise(a*fq,s1+7.7)+0.5*vnoise(a*fq*2.3,s1+9.2))*0.7; z+=k*(vnoise(a*fq,s1+13.3)+0.5*vnoise(a*fq*2.3,s1+15.4)); }
+    return [x,y,z]; };
+  for(let i=i0;i<=i1;i++){
+    const r=k=>rnd(i*1.618+k*7.137+seed*3.71);
+    const ti=ps.burst?0:i/rate, age=t-ti, li=life*(1-lv*r(0)); if(age<0||age>li) continue; const an=age/li;
+    let lo;
+    switch(ps.emit){
+      case 'sphere':{ const th=r(1)*Math.PI*2, ph=Math.acos(2*r(2)-1), rr=Math.cbrt(r(3))*ew; lo=[rr*Math.sin(ph)*Math.cos(th),rr*Math.cos(ph),rr*Math.sin(ph)*Math.sin(th)]; break; }
+      case 'box': lo=[(r(1)-0.5)*ew,(r(2)-0.5)*eh,(r(3)-0.5)*ed]; break;
+      case 'disc':{ const th=r(1)*Math.PI*2, rr=Math.sqrt(r(2))*ew; lo=[Math.cos(th)*rr,0,Math.sin(th)*rr]; break; }
+      case 'ring':{ const th=r(1)*Math.PI*2; lo=[Math.cos(th)*ew,0,Math.sin(th)*ew]; break; }
+      case 'line': lo=[(r(1)-0.5)*ew,0,0]; break;
+      default: lo=[0,0,0];
+    }
+    const lw=M4.apply(R,[lo[0],lo[1],lo[2],0]), o=[org[0]+lw[0],org[1]+lw[1]+oyW,org[2]+lw[2]];
+    const ct=1-r(4)*(1-cosS), st2=Math.sqrt(Math.max(0,1-ct*ct)), ph=r(5)*Math.PI*2, cp=Math.cos(ph)*st2, sp=Math.sin(ph)*st2;
+    const sv=spd*Math.max(0,1+ps.speedVar*(r(6)*2-1)), v=[(bx*ct+ux[0]*cp+vx[0]*sp)*sv,(by*ct+ux[1]*cp+vx[1]*sp)*sv,(bz*ct+ux[2]*cp+vx[2]*sp)*sv];
+    const s1=r(7)*50+seed, P=pos(age,o,v,s1), e=0.02, Pa=pos(Math.max(0,age-e),o,v,s1), Pb=pos(age+e,o,v,s1), dt=age+e-Math.max(0,age-e);
+    let size=ps.size*u*sc*Math.max(0.05,1-ps.sizeVar*r(8))*(1+(ps.sizeEnd-1)*an); if(size<=0.01) continue;
+    let cr,cg,cb;
+    if(ps.cmode==='random'){ const q=cols[Math.floor(r(9)*3)%3]; cr=q[0];cg=q[1];cb=q[2]; }
+    else { const k=an<0.5?an*2:(an-0.5)*2, A=an<0.5?cols[0]:cols[1], B=an<0.5?cols[1]:cols[2]; cr=A[0]+(B[0]-A[0])*k; cg=A[1]+(B[1]-A[1])*k; cb=A[2]+(B[2]-A[2])*k; }
+    let al=ps.alpha; if(ps.fadeIn>0) al*=Math.min(1,an/ps.fadeIn); if(ps.fadeOut>0) al*=Math.min(1,(1-an)/ps.fadeOut);
+    if(ps.flicker>0) al*=1-ps.flicker*(0.5-0.5*vnoise(age*14,r(10)*90));
+    if(al<=0.004) continue;
+    const rot=(['emoji','bubble','snow','bokeh','flame','smoke'].includes(ps.kind)&&ps.kind!=='smoke'&&ps.kind!=='flame'?(r(11)-0.5)*0.6:r(11)*Math.PI*2)+ps.spin*Math.PI/180*(1+ps.spinVar*(r(12)*2-1))*age;
+    const aux=ps.kind==='confetti'?Math.cos(age*(5+r(13)*6)+r(14)*6):r(13);
+    const j=n*13; D[j]=P[0];D[j+1]=P[1];D[j+2]=P[2];D[j+3]=(Pb[0]-Pa[0])/dt;D[j+4]=(Pb[1]-Pa[1])/dt;D[j+5]=(Pb[2]-Pa[2])/dt;
+    D[j+6]=cr;D[j+7]=cg;D[j+8]=cb;D[j+9]=clamp(al,0,1);D[j+10]=size;D[j+11]=rot;D[j+12]=aux; n++;
+  }
+  return n?{n,D,ps}:null;
+}
+/* Alle Partikelsysteme eines Clips (inkl. Glut & Rauch) */
+function partSystems(c,st,lt,W,H){
+  const ps=psFor(c), X=xf(c,lt), org=[X.x*W+st.dx,-(X.y*H+st.dy),kv(c,'z',lt)*W], R=psMat(c,lt), sc=X.sc*st.k, op=clamp(kv(c,'opacity',lt)*st.a,0,1);
+  const seed=hashStr(c.id)+ps.seed*17.3, out=[];
+  for(const s of psSubs(ps)){ const sim=simPS(s,lt,org,R,sc,W,H,seed+(s.seed-ps.seed)*5.1); if(sim){ if(op<1) for(let j=0;j<sim.n;j++) sim.D[j*13+9]*=op; out.push(sim); } }
+  return {org,systems:out,ps,op};
+}
+function partLight(c,st,lt,W,H){
+  const ps=psFor(c); if(!ps.light) return null; const X=xf(c,lt), op=clamp(kv(c,'opacity',lt)*st.a,0,1);
+  let k=ps.lightInt*op*(1-ps.lightFlicker*(0.5-0.5*vnoise(lt*9,hashStr(c.id))));
+  if(ps.burst){ const tt=lt-(ps.delay||0); k*=tt<0?0:Math.min(1,tt*30)*Math.exp(-tt*2.2); }
+  if(k<=0.001) return null; const col=rgbF(ps.lightCol);
+  return {pos:[X.x*W+st.dx,-(X.y*H+st.dy)+ps.size*Math.min(W,H)/1080*0.5,kv(c,'z',lt)*W],col:[col[0]*k,col[1]*k,col[2]*k],range:ps.lightRange*W,decay:1,cosO:-2,cosI:-1,dark:0,obj:true,layers:true};
+}
+/* Ersatz ohne WebGL: einfache weiche Punkte */
+function drawParticlesFallback(c,st,W,H,lt){
+  const cam=cameraAt(0,W,H,true), {systems}=partSystems(c,st,lt,W,H);
+  ctx.save(); ctx.globalCompositeOperation=psFor(c).blend==='add'?'lighter':'source-over';
+  for(const s of systems) for(let j=0;j<s.n;j++){ const o=j*13, D=s.D, p=projBox(cam,W,H,[D[o],D[o+1],D[o+2]]); if(!p) continue; const r=D[o+10]*p.k;
+    ctx.globalAlpha=D[o+9]; ctx.drawImage(softSprite('#'+[D[o+6],D[o+7],D[o+8]].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('')),p.x-r,p.y-r,r*2,r*2); }
+  ctx.restore();
+}
+function drawParticles(c,st,W,H,lt){
+  /* 2D-Partikel: gleiche Engine, aber mit fester Standard-Kamera (bewegt sich nicht mit der 3D-Kamera) */
+  if(!ensureGL(W,H)){ drawParticlesFallback(c,st,W,H,lt); return; }
+  render3D([{c,st,lt}],W,H,0,cameraAt(0,W,H,true));
+}
 const spriteCache=new Map();
 function softSprite(color){ let s=spriteCache.get(color); if(s) return s; s=document.createElement('canvas'); s.width=s.height=64; const g=s.getContext('2d'); const gr=g.createRadialGradient(32,32,0,32,32,32); const [r,gg,b]=hexToRgb(color); gr.addColorStop(0,`rgba(${r},${gg},${b},1)`); gr.addColorStop(0.4,`rgba(${r},${gg},${b},0.5)`); gr.addColorStop(1,`rgba(${r},${gg},${b},0)`); g.fillStyle=gr; g.fillRect(0,0,64,64); spriteCache.set(color,s); return s; }
-function drawParticles(c,st,W,H,lt){
-  const P=PARTICLES[c.pPreset]||PARTICLES.funken, X=xf(c,lt), mn=Math.min(W,H), u=mn/1080;
-  const rate=(P.rate||0)*(c.pAmount??1), life=(P.life||1)*(c.pLife??1), speedK=(c.pSpeed??1), sizeK=(c.pSize??1), grav=(P.grav||0)*(c.pGrav??1), wind=c.pWind||0;
-  const ex=W/2+X.x*W+st.dx, ey=H/2+X.y*H+st.dy, seed=hashStr(c.id), emitter=c.pEmitter&&c.pEmitter!=='auto'?c.pEmitter:P.emitter;
-  const colors=c.pColorOn?[c.pColor]:P.colors;
-  let i0,i1; if(P.burst){ i0=0; i1=Math.round((P.count||100)*(c.pAmount??1))-1; if(lt>life*1.2) return; }
-  else { if(rate<=0) return; i0=Math.ceil((lt-life)*rate); if(!(P.prewarm||c.pPrewarm)) i0=Math.max(0,i0); i1=Math.floor(lt*rate); if(i1-i0>4000) i0=i1-4000; }
-  ctx.save(); ctx.globalAlpha=1; if(P.add) ctx.globalCompositeOperation='lighter';
-  const ga=clamp(kv(c,'opacity',lt)*st.a,0,1);
-  for(let i=i0;i<=i1;i++){
-    const ti=P.burst?0:i/rate, age=lt-ti; if(age<0||age>life) continue;
-    const r=k=>rnd(i*13.37+k*7.13+seed);
-    let x0=ex, y0=ey;
-    if(emitter==='top'){ x0=(r(1)*1.2-0.1)*W; y0=-20*u; }
-    else if(emitter==='bottom'){ x0=(r(1)*1.1-0.05)*W; y0=H+20*u; }
-    else if(emitter==='area'){ x0=r(1)*W; y0=r(2)*H; }
-    else if(emitter==='line'){ x0=ex+(r(1)-0.5)*W*0.6*X.sc; }
-    const ang=((P.dir||90)+(r(3)-0.5)*(P.spread||0))*Math.PI/180, v=(P.speed||0.3)*speedK*(0.6+0.8*r(4))*H;
-    const T=P.drag?(1-Math.exp(-P.drag*age))/P.drag:age;
-    let x=x0+Math.cos(ang)*v*T+wind*H*0.4*age*age, y=y0-Math.sin(ang)*v*T+0.5*grav*H*age*age;
-    if(P.shape==='warp'){ const d=age*age*W*0.5*speedK; x=ex+Math.cos(r(3)*Math.PI*2)*d; y=ey+Math.sin(r(3)*Math.PI*2)*d; }
-    const sz=(P.size||4)*sizeK*u*(1-(P.sizeVar||0)*r(5))*(1+(P.grow||0)*age/life)*X.sc;
-    if(P.wobble) x+=Math.sin(age*2+r(6)*6)*sz*2.5*P.wobble;
-    let a=ga*(P.alpha||1)*Math.min(1,age*8)*(1-Math.pow(age/life,2)); if(P.twinkle) a*=0.5+0.5*Math.sin(age*14+r(7)*6);
-    if(a<=0.01||sz<=0.05) continue;
-    const col=colors[Math.floor(r(8)*colors.length)%colors.length];
-    ctx.globalAlpha=clamp(a,0,1); ctx.fillStyle=col; ctx.strokeStyle=col;
-    switch(P.shape){
-      case 'line':{ const vx=Math.cos(ang)*v+wind*H*0.8*age, vy=-Math.sin(ang)*v+grav*H*age, l=Math.hypot(vx,vy)||1, len=Math.max(sz*4,Math.min(80*u,l*0.035)); ctx.lineWidth=Math.max(1,sz); ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-vx/l*len,y-vy/l*len); ctx.stroke(); break; }
-      case 'warp':{ const d=Math.hypot(x-ex,y-ey); ctx.lineWidth=Math.max(1,sz*(0.3+d/W)); const ux=(x-ex)/(d||1), uy=(y-ey)/(d||1), len=Math.min(d,d*0.25+2); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-ux*len,y-uy*len); ctx.stroke(); break; }
-      case 'confetti':{ ctx.save(); ctx.translate(x,y); ctx.rotate(r(9)*6+age*(r(10)-0.5)*12); ctx.scale(1,Math.cos(age*(6+r(11)*6)+r(12)*6)); ctx.fillRect(-sz/2,-sz/4,sz,sz/2); ctx.restore(); break; }
-      case 'soft':{ const s=softSprite(col); ctx.drawImage(s,x-sz,y-sz,sz*2,sz*2); break; }
-      case 'bubble':{ ctx.lineWidth=Math.max(1,sz*0.08); ctx.beginPath(); ctx.arc(x,y,sz,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha*=0.6; ctx.beginPath(); ctx.arc(x-sz*0.35,y-sz*0.35,sz*0.2,0,Math.PI*2); ctx.fill(); break; }
-      case 'star':{ ctx.save(); ctx.translate(x,y); ctx.rotate(age*2); ctx.beginPath(); for(let k=0;k<8;k++){ const q=k%2?sz*0.25:sz; const aa=k*Math.PI/4; ctx.lineTo(Math.cos(aa)*q,Math.sin(aa)*q); } ctx.closePath(); ctx.fill(); ctx.restore(); break; }
-      case 'emoji':{ ctx.font=`${sz*2}px system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(P.emoji||'❤️',x,y); break; }
-      default:{ ctx.beginPath(); ctx.arc(x,y,sz,0,Math.PI*2); ctx.fill(); }
-    }
-  }
-  ctx.restore();
-  if(['top','bottom','area'].includes(emitter)) boxes.set(c.id,{cx:W/2,cy:H/2,w:W,h:H,rot:0}); else boxes.set(c.id,{cx:ex,cy:ey,w:90*u,h:90*u,rot:0});
+
+/* ---------- Licht ---------- */
+const LIGHT_PRESETS={
+  punkt:{n:'Punktlicht',e:'💡',l:{lKind:'point',lColor:'#ffe2b0',lInt:1.6,lRange:0.9,lGlow:0.5,lGlowSize:0.18,lCore:0.08}},
+  spot:{n:'Spotlight',e:'🔦',l:{lKind:'spot',lColor:'#fff1d6',lInt:2.4,lRange:1.6,lAngle:40,lSoft:0.45,lBeam:0.35,lGlow:0.45,lGlowSize:0.12,lCore:0.08,rx:-35}},
+  kerze:{n:'Kerze',e:'🕯️',l:{lKind:'point',lColor:'#ff9a3c',lInt:1.2,lRange:0.55,lFlicker:0.45,lFlickerSpd:9,lGlow:0.8,lGlowSize:0.14,lCore:0.05,lDark:0.35}},
+  neon:{n:'Neon',e:'🟦',l:{lKind:'point',lColor:'#28e8ff',lInt:1.5,lRange:0.8,lGlow:0.55,lGlowSize:0.16,lCore:0.06,lStreak:0.7,lStreakW:0.012,lFlicker:0.06,lFlickerSpd:20}},
+  blaulicht:{n:'Blaulicht',e:'🚨',l:{lKind:'point',lColor:'#2f6bff',lInt:3,lRange:1.2,lGlow:1,lGlowSize:0.35,lCore:0.07,lRays:0.5,lRayCount:6,lPulse:2.5,lPulseAmt:1,lStreak:0.5}},
+  scheinwerfer:{n:'Scheinwerfer',e:'🎭',l:{lKind:'spot',lColor:'#ffffff',lInt:3.5,lRange:2.4,lAngle:28,lSoft:0.25,lBeam:0.7,lGlow:0.5,lGlowSize:0.12,lCore:0.08,lRays:0.25,lFlare:0.6,lDark:0.4,rx:-25}},
+  sonne:{n:'Sonne',e:'☀️',l:{lKind:'point',lColor:'#fff0c8',lInt:0.9,lRange:2.5,lDecay:0.6,lGlow:0.8,lGlowSize:0.3,lCore:0.1,lRays:0.8,lRayCount:12,lFlare:0.9,lStreak:0.3,y:-0.3,x:0.3,z:0}},
+  blitz:{n:'Blitz',e:'⚡',l:{lKind:'point',lColor:'#cfe0ff',lInt:5,lRange:2.5,lGlow:0.8,lGlowSize:0.4,lCore:0.08,lFlicker:1,lFlickerSpd:30,lPulse:0.6,lPulseAmt:1,lDark:0.5}}
+};
+const LIGHT_TEMPS=[['1900','Kerze',  '#ff8c2e'],['2700','Glühbirne','#ffb46b'],['3200','Halogen','#ffc98f'],['4500','Neutral','#ffe4c4'],['5600','Tageslicht','#fff4e8'],['6500','Bewölkt','#f2f4ff'],['9000','Blauer Himmel','#c8d8ff']];
+function lightParams(c,st,lt,W,H){
+  const X=xf(c,lt), pos=[X.x*W+st.dx,-(X.y*H+st.dy),kv(c,'z',lt)*W], op=clamp(kv(c,'opacity',lt)*st.a,0,1), sd=hashStr(c.id);
+  let k=kv(c,'lInt',lt)*op;
+  if(c.lFlicker>0) k*=1-c.lFlicker*(0.5-0.5*(vnoise(lt*c.lFlickerSpd,sd)*0.7+vnoise(lt*c.lFlickerSpd*2.7,sd+4)*0.3));
+  if(c.lPulse>0&&c.lPulseAmt>0){ const ph=(lt*c.lPulse)%1; const on=ph<0.5?Math.pow(Math.sin(ph*2*Math.PI),2):0; k*=1-c.lPulseAmt*(1-on); }
+  const col=rgbF(c.lColor), R=psMat(c,lt), dir=M4.apply(R,[0,0,-1,0]); const ang=clamp(kv(c,'lAngle',lt),1,170)*Math.PI/360;
+  const spot=c.lKind==='spot';
+  return {c,pos,k,col:[col[0]*k,col[1]*k,col[2]*k],rgb:col,range:Math.max(1,kv(c,'lRange',lt)*W),decay:c.lDecay,cosO:spot?Math.cos(ang):-2,cosI:spot?Math.cos(ang*(1-clamp(c.lSoft,0,0.99))):-1,dir:[dir[0],dir[1],dir[2]],ang,spot,dark:c.lDark||0,obj:c.lOnObj!==false,layers:c.lOnLayers!==false,R,op};
 }
 
 /* ---------- Motion: parenting, wiggle, auto-orient ---------- */
@@ -1625,8 +1956,8 @@ function buildClipEl(c){
   } else if(c.type==='image' && m){ const strip=el('div','strip'); strip.style.backgroundImage=`url("${m.url}")`; d.append(strip); }
   if(isAV(c) && m && m.peaks){ const h=c.type==='audio'?40:16; d.append(waveCanvas(c,m,w,h,c.type==='audio'?'rgba(205,190,255,.85)':'rgba(255,255,255,.7)')); }
   if(c.type==='shape'){ const sw=el('div','strip'); sw.style.background=c.fillGrad?`linear-gradient(90deg,${c.fill},${c.fill2})`:c.fill; sw.style.opacity='.55'; d.append(sw); }
-  let label=c.type==='text'?'T  '+c.text.split('\n')[0]:c.type==='shape'?'◆ '+(SHAPES.find(x=>x[0]===c.shape)||['','Form'])[1]:c.type==='effect'?'✦ '+(FX.find(x=>x[0]===c.fx)||['','Effekt'])[1]:c.type==='camera'?'🎥 Kamera':c.type==='particles'?'✺ '+((PARTICLES[c.pPreset]||{}).n||'Partikel'):c.type==='model'?'🧊 '+(c.prim==='glb'?(m?m.name:'Modell'):(PRIMS.find(x=>x[0]===c.prim)||['','3D'])[1]):(c.type==='audio'?'♪ ':'')+(m?m.name:'(fehlt)');
-  if(c.is3d) label='3D · '+label;
+  let label=c.type==='text'?'T  '+c.text.split('\n')[0]:c.type==='shape'?'◆ '+(SHAPES.find(x=>x[0]===c.shape)||['','Form'])[1]:c.type==='effect'?'✦ '+(FX.find(x=>x[0]===c.fx)||['','Effekt'])[1]:c.type==='camera'?'🎥 Kamera':c.type==='light'?((LIGHT_PRESETS[c.lPreset]||{}).e||'💡')+' '+((LIGHT_PRESETS[c.lPreset]||{}).n||'Licht'):c.type==='particles'?'✺ '+((PARTICLES[c.pPreset]||{}).n||'Partikel'):c.type==='model'?'🧊 '+(c.prim==='glb'?(m?m.name:'Modell'):(PRIMS.find(x=>x[0]===c.prim)||['','3D'])[1]):(c.type==='audio'?'♪ ':'')+(m?m.name:'(fehlt)');
+  if(c.is3d && c.type!=='light') label='3D · '+label;
   if(isAV(c) && c.curve && CURVES[c.curve]) label+=` · ${CURVES[c.curve].n}`; else if(isAV(c) && c.speed!==1) label+=` · ${+c.speed.toFixed(2)}x`;
   if(isAV(c) && c.afx && c.afx!=='none') label+=' · '+(AFX.find(x=>x[0]===c.afx)||['',''])[1];
   if(isAV(c) && c.volume===0) label+=' · stumm';
@@ -2161,7 +2492,7 @@ function renderProps(){
     const b=section(p,'Auswahl'); b.append(el('p','note','Ziehe einen der markierten Clips, um alle zusammen zu verschieben. Mit Strg/Umschalt + Klick fügst du Clips hinzu oder entfernst sie.'));
     const r=el('div','brow'); const d=btn('Alle löschen',()=>deleteSel(false),'trash'); d.classList.add('dg'); r.append(d,btn('Auswahl aufheben',()=>select(null))); b.append(r); return; }
   const m=mediaById(c.mediaId);
-  const ttl=c.type==='text'?c.text.split('\n')[0]:c.type==='shape'?(SHAPES.find(x=>x[0]===c.shape)||['',''])[1]:c.type==='effect'?(FX.find(x=>x[0]===c.fx)||['',''])[1]:(m?m.name:'');
+  const ttl=c.type==='text'?c.text.split('\n')[0]:c.type==='shape'?(SHAPES.find(x=>x[0]===c.shape)||['',''])[1]:c.type==='effect'?(FX.find(x=>x[0]===c.fx)||['',''])[1]:c.type==='light'?((LIGHT_PRESETS[c.lPreset]||{}).n||'Licht'):c.type==='particles'?((PARTICLES[c.pPreset]||{}).n||'Partikel'):(m?m.name:'');
   const head=el('div','phead'); head.append(el('span','badge '+c.type,TYPE_LABEL[c.type]), el('div','tt',ttl));
   const x=iconBtn('trash','Löschen (Entf)',()=>deleteSel(false)); x.classList.add('dg');
   head.append(iconBtn('split','Teilen (S)',doSplit), iconBtn('copy','Duplizieren (Strg+D)',duplicateSel), x); p.append(head);
@@ -2175,17 +2506,21 @@ function renderProps(){
     case 'fx': effectSection(q,c); durationSection(q,c); break;
     case 'obj': modelSection(q,c); break;
     case 'cam': cameraSection(q,c); durationSection(q,c); break;
-    case 'part': particleSection(q,c); break;
+    case 'part': particleSection(q,c); durationSection(q,c); break;
+    case 'bew': particleMotionSection(q,c); break;
+    case 'look': if(c.type==='light') lightLookSection(q,c); else particleLookSection(q,c); break;
+    case 'licht': lightSection(q,c); durationSection(q,c); break;
+    case 'pos': lightPosSection(q,c); break;
     case 'basis': transformSection(q,c); if(!isAV(c)) durationSection(q,c); break;
     case 'bild': adjustSection(q,c,true); chromaSection(q,c); if(!S.simple) cropSection(q,c); else q.append(el('p','note','Masken und Zuschneiden findest du im Profi-Modus (oben rechts).')); break;
-    case 'anim': animSection(q,c); if(!S.simple && c.type!=='effect') motionSection(q,c); break;
+    case 'anim': animSection(q,c); if(!S.simple && !['effect','light'].includes(c.type)) motionSection(q,c); break;
     case 'tempo': speedSection(q,c); break;
     case 'audio': audioSection(q,c); break;
   }
 
 }
 function durationSection(p,c){ const b=section(p,'Dauer'); slider(b,'Länge',c,'duration',0.2,120,0.1,v=>v.toFixed(1)+'s',v=>{ let nd=v; let maxE=Infinity; for(const o of S.clips) if(o.trackId===c.trackId&&o.id!==c.id&&o.start>=c.start+EPS) maxE=Math.min(maxE,o.start); nd=Math.min(nd,maxE-c.start); c.duration=nd; updateClipEl(c); updateTimeLabels(); const pi=$('#pinfo'); if(pi) pi.textContent=`Start ${fmtTime(c.start)} · Länge ${fmtTime(c.duration)}`; }); }
-const PROP_TABS={video:[['basis','Basis'],['bild','Bild'],['anim','Animation'],['tempo','Tempo'],['audio','Audio']],image:[['basis','Basis'],['bild','Bild'],['anim','Animation']],text:[['text','Text'],['basis','Basis'],['anim','Animation']],shape:[['form','Form'],['basis','Basis'],['anim','Animation']],model:[['obj','Objekt'],['basis','Basis'],['anim','Animation']],particles:[['part','Partikel'],['basis','Basis'],['anim','Animation']],effect:[['fx','Effekt'],['anim','Animation']],audio:[['audio','Audio'],['tempo','Tempo']],camera:[['cam','Kamera']]};
+const PROP_TABS={video:[['basis','Basis'],['bild','Bild'],['anim','Animation'],['tempo','Tempo'],['audio','Audio']],image:[['basis','Basis'],['bild','Bild'],['anim','Animation']],text:[['text','Text'],['basis','Basis'],['anim','Animation']],shape:[['form','Form'],['basis','Basis'],['anim','Animation']],model:[['obj','Objekt'],['basis','Basis'],['anim','Animation']],particles:[['part','Partikel'],['bew','Bewegung'],['look','Aussehen'],['basis','Basis'],['anim','Animation']],light:[['licht','Licht'],['look','Aussehen'],['pos','Position'],['anim','Animation']],effect:[['fx','Effekt'],['anim','Animation']],audio:[['audio','Audio'],['tempo','Tempo']],camera:[['cam','Kamera']]};
 S.propTab={};
 function textSection(p,c){
   const b=section(p,'Text');
@@ -2226,7 +2561,7 @@ function effectSection(p,c){
   if(c.fx!=='adjust' && !['invert'].includes(c.fx)) slider(b,'Intensität',c,'amt',0,100,1,v=>v+'%');
   kfSlider(b,'Deckkraft',c,'opacity',0,1,0.01,pct);
   b.append(el('p','note','Wirkt auf alles, was auf den Spuren darunter liegt – so lange der Effekt-Clip läuft.'));
-  if(c.fx==='adjust') adjustSection(p,c,true);
+  if(c.fx==='adjust') adjustSection(p,c,true); else fxDetailSection(p,c);
 }
 function cropSection(p,c){
   const b=section(p,'Zuschneiden, Maske & Rahmen',false);
@@ -2393,16 +2728,114 @@ function camPreset(c,name){
     case 'spiral': K('orbitY',[[0,0],[1,270]]); K('dist',[[0,2],[1,0.8]]); K('roll',[[0,-20],[1,0]]); break;
   }
 }
+/* ---------- Partikel-Einstellungen ---------- */
+function psSlider(b,c,label,key,min,max,step,fmt){ const ps=psFor(c); return slider(b,label,ps,key,min,max,step,fmt||(v=>String(+(+v).toFixed(2)))); }
+function psColor(b,c,label,key){ const ps=psFor(c); const i=el('input'); i.type='color'; i.value=ps[key]; i.oninput=()=>{ ps[key]=i.value; requestRender(); }; i.onchange=()=>commit(); row(b,label,i); return i; }
+function psToggle(b,c,label,key,after){ const ps=psFor(c); const ch=el('div','chips'); ch.append(chip(ps[key]?'An':'Aus',!!ps[key],()=>{ ps[key]=!ps[key]; commit(); renderProps(); requestRender(); if(after) after(); })); row(b,label,ch); }
 function particleSection(p,c){
+  const ps=psFor(c);
   const b=section(p,'Partikel');
-  selectRow(b,'Art',c,'pPreset',Object.entries(PARTICLES).map(([k,v])=>[k,v.e+' '+v.n]),()=>{ updateClipEl(c); renderProps(); });
-  selectRow(b,'Quelle',c,'pEmitter',[['auto','Automatisch'],['point','Punkt'],['line','Linie'],['top','Von oben'],['bottom','Von unten'],['area','Ganzes Bild']]);
-  slider(b,'Menge',c,'pAmount',0.05,4,0.05,pct); slider(b,'Größe',c,'pSize',0.1,5,0.05,pct);
-  slider(b,'Tempo',c,'pSpeed',0,4,0.05,pct); slider(b,'Schwerkraft',c,'pGrav',-3,3,0.05,pct);
-  slider(b,'Lebensdauer',c,'pLife',0.1,4,0.05,pct); slider(b,'Wind',c,'pWind',-1,1,0.01,v=>Math.round(v*100)+'');
-  const g=el('div','brow'); toggleChip(g,'Eigene Farbe',c,'pColorOn'); const col=el('input'); col.type='color'; col.value=c.pColor; col.oninput=()=>{ c.pColor=col.value; requestRender(); }; col.onchange=()=>commit(); g.append(col); row(b,'Farbe',g);
-  const pc=el('div','chips'); toggleChip(pc,'Schon am Anfang voll',c,'pPrewarm'); row(b,'',pc);
-  b.append(el('p','note','Die Quelle verschiebst du im Vorschaufenster oder mit Position X/Y – auch mit Keyframes.'));
+  selectRow(b,'Art',c,'pPreset',Object.entries(PARTICLES).map(([k,v])=>[k,v.e+' '+v.n]),()=>{ c.ps=null; const ps2=psFor(c); ps2.seed=0; updateClipEl(c); renderProps(); });
+  const ch=el('div','chips'); ch.append(chip('🧊 Im 3D-Raum',!!c.is3d,()=>{ c.is3d=!c.is3d; commit(); updateClipEl(c); renderProps(); requestRender(); if(c.is3d) toast('Partikel sind jetzt im 3D-Raum – in der 2. Ansicht mit dem Gizmo verschieben'); })); row(b,'Raum',ch);
+  b.append(el('p','note',c.is3d?'Die Partikel leben im 3D-Raum: Kamera, Tiefe und Verdeckung wirken. In der rechten Ansicht kannst du die Quelle wie in Blender verschieben und drehen.':'Flach über dem Bild (bewegt sich nicht mit der 3D-Kamera).'));
+  const r=el('div','brow'); r.append(btn('🎲 Neu würfeln',()=>{ ps.seed=(ps.seed||0)+1; commit(); requestRender(); }),btn('Auf Standard',()=>{ c.ps=null; psFor(c); commit(); renderProps(); requestRender(); })); b.append(r);
+  const e=section(p,'Ausstoß');
+  selectRow(e,'Modus',{v:ps.burst?'burst':'flow'},'v',[['flow','Dauerhaft'],['burst','Einmal (Explosion)']],()=>{},false).onchange=function(){ ps.burst=this.value==='burst'; commit(); renderProps(); requestRender(); };
+  if(ps.burst) psSlider(e,c,'Anzahl','count',1,MAXP,1,v=>Math.round(v)+''); else psSlider(e,c,'Pro Sekunde','rate',0,1500,1,v=>Math.round(v)+'/s');
+  psSlider(e,c,'Lebensdauer','life',0.05,20,0.05,v=>(+v).toFixed(2)+' s'); psSlider(e,c,'Lebensd. Zufall','lifeVar',0,0.95,0.01,pct);
+  psSlider(e,c,'Verzögerung','delay',0,10,0.05,v=>(+v).toFixed(2)+' s');
+  if(!ps.burst) psToggle(e,c,'Schon voll','prewarm');
+  const q=section(p,'Quelle');
+  selectRow(q,'Form',ps,'emit',EMITS,()=>renderProps());
+  if(ps.emit!=='point'){ psSlider(q,c,ps.emit==='box'?'Breite':'Größe','ew',0,3,0.005,pct); if(ps.emit==='box'){ psSlider(q,c,'Höhe','eh',0,3,0.005,pct); psSlider(q,c,'Tiefe','ed',0,3,0.005,pct); } }
+  q.append(el('p','note','Position, Drehung und Größe der Quelle stellst du im Tab „Basis“ oder direkt im Bild ein (auch mit Keyframes).'));
+  const x=section(p,'Extras',false);
+  psSlider(x,c,'Glut / Funken','embers',0,2,0.01,pct); psSlider(x,c,'Rauch','smoke',0,2,0.01,pct);
+  psToggle(x,c,'Leuchtet','light');
+  if(ps.light){ psSlider(x,c,'Lichtstärke','lightInt',0,8,0.05,v=>(+v).toFixed(2)); psSlider(x,c,'Reichweite','lightRange',0.05,4,0.01,pct); psColor(x,c,'Lichtfarbe','lightCol'); psSlider(x,c,'Flackern','lightFlicker',0,1,0.01,pct);
+    x.append(el('p','note','Das Licht beleuchtet 3D-Objekte und 3D-Ebenen in der Nähe – z. B. Feuer, das einen Würfel orange anstrahlt.')); }
+}
+function particleMotionSection(p,c){
+  const ps=psFor(c);
+  const b=section(p,'Richtung & Tempo');
+  psSlider(b,c,'Tempo','speed',0,5,0.005,v=>(+v).toFixed(3)); psSlider(b,c,'Tempo Zufall','speedVar',0,1,0.01,pct);
+  psSlider(b,c,'Richtung','yaw',-180,180,1,v=>Math.round(v)+'°'); psSlider(b,c,'Neigung','pitch',-90,90,1,v=>Math.round(v)+'°');
+  psSlider(b,c,'Streuung','spread',0,360,1,v=>Math.round(v)+'°');
+  b.append(el('p','note','Neigung 90° = nach oben, -90° = nach unten, 0° = zur Seite. Streuung 360° = in alle Richtungen.'));
+  const f=section(p,'Kräfte');
+  psSlider(f,c,'Schwerkraft','grav',-3,3,0.005,v=>(+v).toFixed(3)); psSlider(f,c,'Wind X','windX',-1,1,0.005,v=>(+v).toFixed(3)); psSlider(f,c,'Wind Tiefe','windZ',-1,1,0.005,v=>(+v).toFixed(3));
+  psSlider(f,c,'Luftwiderstand','drag',0,10,0.05,v=>(+v).toFixed(2)); psSlider(f,c,'Beschleunigung','accel',0,6,0.05,v=>(+v).toFixed(2));
+  psSlider(f,c,'Turbulenz','turb',0,2,0.01,pct); psSlider(f,c,'Turbulenz-Tempo','turbFreq',0.05,8,0.05,v=>(+v).toFixed(2));
+  f.append(el('p','note','Negative Schwerkraft = steigt auf (wie Feuer und Rauch).'));
+  const s=section(p,'Drehung',false);
+  psSlider(s,c,'Drehung/s','spin',-1080,1080,1,v=>Math.round(v)+'°'); psSlider(s,c,'Drehung Zufall','spinVar',0,1,0.01,pct);
+}
+function particleLookSection(p,c){
+  const ps=psFor(c);
+  const b=section(p,'Aussehen');
+  selectRow(b,'Form',ps,'kind',PART_KINDS,()=>renderProps());
+  if(ps.kind==='emoji'){ const i=el('input'); i.type='text'; i.value=ps.emoji; i.maxLength=8; i.oninput=()=>{ ps.emoji=i.value||'❤️'; requestRender(); }; i.onchange=()=>commit(); i.onkeydown=e=>e.stopPropagation(); row(b,'Emoji',i); }
+  selectRow(b,'Mischung',ps,'blend',[['add','Leuchtend (addieren)'],['normal','Normal (deckend)']]);
+  psSlider(b,c,'Größe','size',0.2,800,0.1,v=>(+v).toFixed(1)); psSlider(b,c,'Größe Zufall','sizeVar',0,1,0.01,pct); psSlider(b,c,'Größe am Ende','sizeEnd',0,8,0.01,pct);
+  psSlider(b,c,'Streckung','stretch',0,10,0.05,v=>(+v).toFixed(2));
+  const k=section(p,'Farbe');
+  selectRow(k,'Farbmodus',ps,'cmode',[['life','Verlauf (Anfang → Ende)'],['random','Zufällig aus 3 Farben']]);
+  psColor(k,c,ps.cmode==='life'?'Anfang':'Farbe 1','c1'); psColor(k,c,ps.cmode==='life'?'Mitte':'Farbe 2','c2'); psColor(k,c,ps.cmode==='life'?'Ende':'Farbe 3','c3');
+  const cc=el('div','chips'); for(const [l,a,bb,cx] of [['Feuer','#fff4c8','#ff9a1c','#b01800'],['Eis','#ffffff','#9fe6ff','#2f7bff'],['Magie','#ffffff','#b48cff','#3a7bff'],['Gift','#f4ffb0','#6aff3a','#0b6b2a'],['Gold','#fffbe0','#ffd24a','#a8640a'],['Weiß','#ffffff','#ffffff','#ffffff']]) cc.append(chip(l,false,()=>{ ps.c1=a; ps.c2=bb; ps.c3=cx; commit(); renderProps(); requestRender(); })); k.append(cc);
+  const a=section(p,'Sichtbarkeit');
+  psSlider(a,c,'Deckkraft','alpha',0,1,0.01,pct); psSlider(a,c,'Einblenden','fadeIn',0,1,0.01,pct); psSlider(a,c,'Ausblenden','fadeOut',0,1,0.01,pct); psSlider(a,c,'Flackern','flicker',0,1,0.01,pct);
+  if(ps.blend!=='add') psToggle(a,c,'Wird beleuchtet','lit');
+}
+/* ---------- Licht ---------- */
+function lightSection(p,c){
+  const b=section(p,'Licht');
+  selectRow(b,'Art',c,'lKind',[['point','💡 Punktlicht (alle Richtungen)'],['spot','🔦 Spotlight (Kegel)']],()=>{ renderProps(); requestRender(); });
+  colorRow(b,'Farbe',c,'lColor');
+  const tc=el('div','chips'); for(const [k,l,col] of LIGHT_TEMPS){ const ch=chip(l,c.lColor===col,()=>{ c.lColor=col; commit(); renderProps(); requestRender(); }); ch.title=k+' Kelvin'; tc.append(ch); } row(b,'Temperatur',tc);
+  kfSlider(b,'Stärke',c,'lInt',0,10,0.01,v=>(+v).toFixed(2));
+  kfSlider(b,'Reichweite',c,'lRange',0.02,6,0.01,pct);
+  slider(b,'Abfall',c,'lDecay',0,4,0.01,v=>(+v).toFixed(2));
+  if(c.lKind==='spot'){ kfSlider(b,'Kegelwinkel',c,'lAngle',2,170,1,v=>Math.round(v)+'°'); slider(b,'Kegelrand weich',c,'lSoft',0,1,0.01,pct); slider(b,'Lichtkegel sichtbar',c,'lBeam',0,2,0.01,pct);
+    b.append(el('p','note','Richtung: Werkzeug „Drehen“ (R) oder die Regler „Kippen/Drehen“ unter Position.')); }
+  const w=section(p,'Wirkung');
+  const ch=el('div','chips'); toggleChip(ch,'3D-Objekte',c,'lOnObj'); toggleChip(ch,'3D-Ebenen (Videos, Bilder, Text)',c,'lOnLayers'); row(w,'Beleuchtet',ch);
+  slider(w,'Umgebung abdunkeln',c,'lDark',0,1,0.01,pct);
+  w.append(el('p','note','Tipp: Mit „Umgebung abdunkeln“ wird der Rest dunkler – dann sieht man das Licht viel stärker. Videos werden nur beleuchtet, wenn sie „3D-Ebene“ sind.'));
+  const f=section(p,'Flackern & Blinken',false);
+  slider(f,'Flackern',c,'lFlicker',0,1,0.01,pct); slider(f,'Flacker-Tempo',c,'lFlickerSpd',0.5,40,0.5,v=>(+v).toFixed(1)+' Hz');
+  slider(f,'Blinken',c,'lPulseAmt',0,1,0.01,pct); slider(f,'Blink-Tempo',c,'lPulse',0,10,0.05,v=>(+v).toFixed(2)+' Hz');
+}
+function lightLookSection(p,c){
+  const g=section(p,'Lichtschein');
+  slider(g,'Leuchten',c,'lGlow',0,3,0.01,pct); slider(g,'Größe',c,'lGlowSize',0,2,0.005,pct); slider(g,'Heller Kern',c,'lCore',0,0.6,0.005,pct);
+  const r=section(p,'Strahlen',false);
+  slider(r,'Strahlen',c,'lRays',0,3,0.01,pct); slider(r,'Anzahl',c,'lRayCount',2,32,1,v=>Math.round(v)+''); slider(r,'Drehung',c,'lRayRot',-180,180,1,v=>Math.round(v)+'°'); slider(r,'Dreht sich',c,'lRaySpin',-360,360,1,v=>Math.round(v)+'°/s');
+  const s=section(p,'Anamorph-Streifen',false);
+  slider(s,'Streifen',c,'lStreak',0,3,0.01,pct); slider(s,'Länge',c,'lStreakLen',0.05,3,0.01,pct); slider(s,'Dicke',c,'lStreakW',0.001,0.2,0.001,v=>(v*100).toFixed(1)+'%');
+  const l=section(p,'Linsenreflex',false);
+  slider(l,'Reflexe',c,'lFlare',0,2,0.01,pct); slider(l,'Anzahl',c,'lFlareN',1,10,1,v=>Math.round(v)+'');
+  l.append(el('p','note','Linsenreflexe wandern wie bei einer echten Kamera durchs Bild, wenn sich das Licht bewegt.'));
+}
+function lightPosSection(p,c){
+  const b=section(p,'Position im Raum');
+  kfNav(b,c);
+  kfSlider(b,'Position X',c,'x',-2,2,0.001,v=>Math.round(v*100)+'');
+  kfSlider(b,'Position Y',c,'y',-2,2,0.001,v=>Math.round(v*100)+'');
+  kfSlider(b,'Tiefe (Z)',c,'z',-4,2,0.005,v=>Math.round(v*100)+'');
+  kfSlider(b,'Kippen (X)',c,'rx',-180,180,1,v=>Math.round(v)+'°');
+  kfSlider(b,'Drehen (Y)',c,'ry',-180,180,1,v=>Math.round(v)+'°');
+  kfSlider(b,'Deckkraft',c,'opacity',0,1,0.01,pct);
+  b.append(el('p','note','Im Vorschaubild ziehen = verschieben. Mit 2 Ansichten (Taste 2) siehst du das Licht im Raum und kannst es wie in Blender bewegen.'));
+}
+function addLight(k='punkt',at=null){ const c=baseClip('light'); const L=LIGHT_PRESETS[k]||LIGHT_PRESETS.punkt; Object.assign(c,{x:-0.15,y:-0.15,z:0.25},L.l); c.lPreset=k; c.duration=Math.max(3,Math.min(10,(dur()||5)-(at==null?S.t:at))); placeAuto(c,'visual',at==null?S.t:at,null); S.clips.push(c); afterAdd(c);
+  toast(L.n+' hinzugefügt – rechts kannst du fast alles einstellen'); }
+/* ---------- Effekt-Feineinstellungen ---------- */
+function fxDetailSection(p,c){
+  const defs=FXP[c.fx]; if(!defs||!defs.length) return;
+  c.fxp=c.fxp||{}; const o=c.fxp; const b=section(p,'Feineinstellungen');
+  for(const d of defs){ const [k,l]=d; if(o[k]==null) o[k]=d[2]==='color'||d[2]==='sel'?d[3]:d[5];
+    if(d[2]==='color') colorRow(b,l,o,k); else if(d[2]==='sel') selectRow(b,l,o,k,d[4]); else slider(b,l,o,k,d[2],d[3],d[4],d[6]); }
+  const r=el('div','brow'); r.append(btn('Zurücksetzen',()=>{ c.fxp={}; commit(); renderProps(); requestRender(); })); b.append(r);
 }
 function motionSection(p,c){
   const b=section(p,'Motion (After Effects)',false);
@@ -2415,7 +2848,7 @@ function motionSection(p,c){
 }
 function addModel(prim,at=null){ const c=baseClip('model'); c.prim=prim; c.duration=5; c.spin=0; c.rx=0; c.ry=0; c.mcolor=['#22e3d3','#ff3d8b','#ffd400','#7c5cff','#ff7a59','#4ade80'][Math.floor(Math.random()*6)]; placeAuto(c,'visual',at==null?S.t:at,null); S.clips.push(c); afterAdd(c); }
 function addCamera(){ const c=baseClip('camera'); c.duration=Math.max(3,(dur()||5)-S.t); placeAuto(c,'visual',S.t,null); S.clips.push(c); afterAdd(c); toast('Kamera hinzugefügt – wähle rechts eine Kamerafahrt oder setze Keyframes'); }
-function addParticles(k,at=null){ const c=baseClip('particles'); c.pPreset=k; c.duration=k==='explosion'?2:5; if(['funken','feuer','rauch'].includes(k)) c.y=0.3; placeAuto(c,'visual',at==null?S.t:at,null); S.clips.push(c); afterAdd(c); }
+function addParticles(k,at=null){ const c=baseClip('particles'); c.pPreset=k; c.is3d=true; psFor(c); c.duration=k==='explosion'?2.5:5; if(PART_POS[k]!=null) c.y=PART_POS[k]; placeAuto(c,'visual',at==null?S.t:at,null); S.clips.push(c); afterAdd(c); }
 function build3DPane(){
   const p=$('#pane-3d'); p.innerHTML='';
   p.append(el('h4',null,'Kamera'));
@@ -2428,7 +2861,12 @@ function build3DPane(){
   const lab=el('label','btn'); lab.style.cssText='width:100%;margin-top:8px'; lab.innerHTML=ic('upload')+'<span>3D-Modell importieren (.glb)</span>';
   const fi=el('input'); fi.type='file'; fi.accept='.glb,model/gltf-binary'; fi.hidden=true; fi.onchange=async()=>{ if(fi.files[0]){ const a=await importFiles([fi.files[0]]); if(a[0]) addMediaClip(a[0],S.t); } fi.value=''; }; lab.append(fi); p.append(lab);
   p.append(el('p','note','Kostenlose .glb-Modelle gibt es z. B. bei Sketchfab oder Poly Pizza.'));
-  p.append(el('h4',null,'Partikel'));
+  p.append(el('h4',null,'Licht'));
+  const lg=el('div','tgrid');
+  for(const [k,v] of Object.entries(LIGHT_PRESETS)){ const d=el('div','tpre'); d.style.height='48px'; d.innerHTML=`<span style="font-size:20px">${v.e}</span><span style="font-size:13px;margin-left:6px">${v.n}</span>`; d.onclick=()=>addLight(k); lg.append(d); }
+  p.append(lg);
+  p.append(el('p','note','Lichter beleuchten 3D-Objekte und 3D-Ebenen, leuchten selbst und können Strahlen, Lichtkegel und Linsenreflexe haben.'));
+  p.append(el('h4',null,'Partikel (im 3D-Raum)'));
   const pg=el('div','tgrid');
   for(const [k,v] of Object.entries(PARTICLES)){ const d=el('div','tpre'); d.style.height='48px'; d.innerHTML=`<span style="font-size:20px">${v.e}</span><span style="font-size:13px;margin-left:6px">${v.n}</span>`; d.onclick=()=>addParticles(k); pg.append(d); }
   p.append(pg);
@@ -2504,7 +2942,7 @@ function hitTest(p){
   for(const c of act){ const b=boxes.get(c.id); if(b && hitBox(b,p)) return c; } return null;
 }
 const canTransform=c=>!!c && !['effect','camera','audio'].includes(c.type) && !(c.type==='shape'&&c.shape==='bg');
-const canRot3d=c=>!!c && (c.type==='model' || (['video','image','text','shape'].includes(c.type) && c.shape!=='bg'));
+const canRot3d=c=>!!c && (['model','light','particles'].includes(c.type) || (['video','image','text','shape'].includes(c.type) && c.shape!=='bg'));
 function handlesOf(b,sf){
   const co=Math.cos(b.rot), si=Math.sin(b.rot), P=(lx,ly)=>({x:b.cx+lx*co-ly*si, y:b.cy+lx*si+ly*co});
   const hs=[]; for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]) hs.push(Object.assign(P(sx*b.w/2,sy*b.h/2),{kind:'scale',sx,sy}));
@@ -2541,7 +2979,7 @@ stageEl.addEventListener('pointerdown',e=>{
   const lt=localT(c); let mode=S.tool; if(e.altKey && canRot3d(c)) mode='rot3d';
   if((mode==='rot3d'||mode==='depth') && !canRot3d(c)) mode='move';
   if(mode==='scale'){ const b=boxes.get(c.id)||{cx:cv.width/2,cy:cv.height/2}; startDrag(e,{mode:'scale',c,p0,cx:b.cx,cy:b.cy,s0:kv(c,'scale',lt),d0:Math.max(8,Math.hypot(p0.x-b.cx,p0.y-b.cy))}); return; }
-  if((mode==='rot3d'||mode==='depth') && c.type!=='model' && !c.is3d){ c.is3d=true; updateClipEl(c); renderProps(); toast('Clip ist jetzt eine 3D-Ebene'); }
+  if((mode==='rot3d'||mode==='depth') && !['model','light'].includes(c.type) && !c.is3d){ c.is3d=true; updateClipEl(c); renderProps(); toast(c.type==='particles'?'Partikel sind jetzt im 3D-Raum':'Clip ist jetzt eine 3D-Ebene'); }
   startDrag(e,{mode,c,p0,e0:{x:e.clientX,y:e.clientY},v:{x:kv(c,'x',lt),y:kv(c,'y',lt),rx:kv(c,'rx',lt),ry:kv(c,'ry',lt),z:kv(c,'z',lt)}});
 });
 stageEl.addEventListener('pointermove',e=>{
@@ -2573,7 +3011,7 @@ let wheelT;
 stageEl.addEventListener('wheel',e=>{ if(e.target.closest('#ptool')) return;
   if(S.tool==='camera'){ e.preventDefault(); const cam=activeCamera(true); setVal(cam,'dist',clamp(kv(cam,'dist',localT(cam))*(e.deltaY<0?1/1.06:1.06),0.1,6)); refreshKf(); requestRender(); clearTimeout(wheelT); wheelT=setTimeout(()=>{ commit(); updateClipEl(cam); },350); return; }
   const c=selClip(); if(!canTransform(c)) return; e.preventDefault();
-  if(S.tool==='depth' && canRot3d(c)){ if(!c.is3d&&c.type!=='model'){ c.is3d=true; renderProps(); } setVal(c,'z',clamp(kv(c,'z',localT(c))+(e.deltaY<0?0.05:-0.05),-3,1.5)); }
+  if(S.tool==='depth' && canRot3d(c)){ if(!c.is3d&&!['model','light'].includes(c.type)){ c.is3d=true; renderProps(); } setVal(c,'z',clamp(kv(c,'z',localT(c))+(e.deltaY<0?0.05:-0.05),-3,1.5)); }
   else setVal(c,'scale',clamp(kv(c,'scale',localT(c))*(e.deltaY<0?1.05:1/1.05),0.02,10));
   refreshKf(); requestRender(); clearTimeout(wheelT); wheelT=setTimeout(()=>{ commit(); updateClipEl(c); },350); },{passive:false});
 cv.addEventListener('dblclick',()=>{ const c=selClip(); if(c&&c.type==='text'){ const t=$('#propText'); if(t){ t.focus(); t.select(); } } });
@@ -2627,7 +3065,7 @@ function updatePtool(){
 S.split=false; S.v2={yaw:-38,pitch:24,dist:3.4,tx:0,ty:0,tz:-0.4,preset:'free'}; S.v2mode='move'; S.giz=null; S.overV2=false;
 const V2_PRESETS={free:['Eigene Ansicht',-38,24,3.4],top:['Oben',0,89,4.2],front:['Vorne',0,0,2.8],left:['Links',-90,0,3.4],right:['Rechts',90,0,3.4],back:['Hinten',180,0,3.4]};
 const AX=[{n:'X',v:[1,0,0],col:'#ff5f6d'},{n:'Y',v:[0,1,0],col:'#7ee36b'},{n:'Z',v:[0,0,1],col:'#4f9dff'}];
-const is3dItem=c=>c.type==='model'||(c.is3d&&['video','image','text','shape'].includes(c.type)&&!(c.type==='shape'&&c.shape==='bg'));
+function is3dItem(c){ return c.type==='model'||c.type==='light'||(c.type==='particles'&&c.is3d)||(c.is3d&&['video','image','text','shape'].includes(c.type)&&!(c.type==='shape'&&c.shape==='bg')); }
 function editorCam(W,H){
   const v=S.v2, D0=(H/2)/Math.tan(25*Math.PI/180), tgt=[v.tx*W,v.ty*H,v.tz*W];
   const yaw=v.yaw*Math.PI/180, pit=clamp(v.pitch,-89,89)*Math.PI/180, d=D0*v.dist;
@@ -2658,6 +3096,7 @@ function renderView2(t){
   catch(e){ console.warn(e); } finally{ ctx=sv; }
   const items=items3DAt(t,W,H);
   try{ render3D(items,W,H,t,ec,g,[{id:'__comp',canvas:compC,M:M4.S(W,H,1)}]); }finally{ boxes.clear(); for(const [a,b] of saved) boxes.set(a,b); }
+  drawLightGuides(g,W,H,t,ec,P,1);
   /* Rahmen der Bildfläche */
   g.setLineDash([6,4]); g.strokeStyle='rgba(34,227,211,.75)'; g.lineWidth=1.2; g.beginPath();
   const fr=[[-W/2,H/2,0],[W/2,H/2,0],[W/2,-H/2,0],[-W/2,-H/2,0]]; for(let i=0;i<4;i++) line(fr[i],fr[(i+1)%4],8); g.stroke(); g.setLineDash([]);
@@ -2737,7 +3176,7 @@ function gizHit(x,y){
     const p=cpt(e);
     if(!drag){ c2.style.cursor=gizHit(p[0],p[1])?'pointer':'grab'; return; }
     if(drag.giz){ const {c,v0,G,p0}=drag, W=cv.width, H=cv.height, dx=p[0]-p0[0], dy=p[1]-p0[1]; drag.moved=true;
-      if(!c.is3d && c.type!=='model') c.is3d=true;
+      if(!c.is3d && !['model','light'].includes(c.type)) c.is3d=true;
       switch(drag.giz.kind){
         case 'axis':{ const tip=drag.giz.ax.tip, ul=Math.hypot(tip[0]-G.pc[0],tip[1]-G.pc[1])||1, u=[(tip[0]-G.pc[0])/ul,(tip[1]-G.pc[1])/ul]; let w=(dx*u[0]+dy*u[1])/(ul/G.L); if(e.ctrlKey) w=Math.round(w/(W/20))*(W/20);
           const n=drag.giz.ax.a.n; if(n==='X') setVal(c,'x',v0.x+w/W); else if(n==='Y') setVal(c,'y',v0.y-w/H); else setVal(c,'z',clamp(v0.z+w/W,-6,3)); S.dragLabel=null; break; }
@@ -2765,6 +3204,9 @@ function gizHit(x,y){
 
 /* ---------- Hilfe ---------- */
 const HELP=[
+ ['Licht hinzufügen','licht lampe spotlight scheinwerfer kerze neon sonne blaulicht beleuchtung leuchten glow lens flare linsenreflex strahlen','Links im Tab <b>3D</b> unter „Licht“ ein Licht anklicken (Punktlicht, Spotlight, Kerze, Neon, Blaulicht, Scheinwerfer, Sonne, Blitz). Ein Licht <b>beleuchtet 3D-Objekte und 3D-Ebenen</b> (Videos, Bilder und Texte mit „3D-Ebene“). Rechts kannst du fast alles einstellen: <ul><li><b>Licht</b>: Art, Farbe, Farbtemperatur, Stärke, Reichweite, Abfall, Kegelwinkel und sichtbarer Lichtkegel beim Spotlight, „Umgebung abdunkeln“, Flackern und Blinken.</li><li><b>Aussehen</b>: Leuchten, Kern, Strahlen, Anamorph-Streifen und Linsenreflexe.</li><li><b>Position</b>: X, Y, Tiefe und Richtung, alles mit Keyframes.</li></ul>Mit 2 Ansichten (Taste <b>2</b>) siehst du das Licht als Symbol im Raum und verschiebst es mit dem Gizmo.'],
+ ['Partikel im 3D-Raum','partikel feuer rauch funken explosion schnee regen nebel glut magie staub konfetti 3d raum effekt','Partikel aus dem Tab <b>3D</b> leben im 3D-Raum: Die Kamera fliegt durch sie hindurch, Objekte davor verdecken sie und du kannst die Quelle in der rechten Ansicht wie in Blender verschieben und drehen. Rechts gibt es fünf Bereiche: <b>Partikel</b> (Art, Menge, Lebensdauer, Quelle, Glut, Rauch, Leuchten), <b>Bewegung</b> (Tempo, Richtung, Streuung, Schwerkraft, Wind, Luftwiderstand, Turbulenz, Drehung), <b>Aussehen</b> (Form, Größe, Farben, Ein-/Ausblenden, Flackern). Mit „Neu würfeln“ bekommst du eine andere zufällige Verteilung. Feuer und Funken können selbst leuchten und Objekte in der Nähe anstrahlen.'],
+ ['Zahlen eintippen','zahl eingeben genau wert tippen präzise regler','Klick auf die Zahl rechts neben einem Regler, tipp den Wert ein und drück <b>Enter</b>. Mit ↑/↓ änderst du ihn in kleinen Schritten, mit Umschalt in großen.'],
  ['Erste Schritte','start anfang los anfangen grundlagen','<ol><li>Links bei <b>Medien</b> auf „Medien importieren“ klicken oder Dateien ins Fenster ziehen.</li><li>Auf das <b>+</b> eines Mediums klicken – es landet auf der Timeline unten.</li><li>Clip anklicken: rechts erscheinen alle Einstellungen, im Vorschaubild kannst du ihn direkt bewegen.</li><li>Oben rechts auf <b>Exportieren</b> klicken, wenn du fertig bist.</li></ol>'],
  ['Medien importieren','video bild musik foto datei hochladen öffnen laden mp4 mp3 png jpg','Links im Tab <b>Medien</b> auf „Medien importieren“ klicken oder Dateien einfach ins Programm ziehen. Unterstützt werden Videos (MP4, MOV, WebM), Bilder (PNG, JPG, GIF, WebP), Musik (MP3, WAV, M4A …) und 3D-Modelle (.glb). Ziehst du Dateien direkt auf die Timeline, landen sie gleich an der richtigen Stelle.'],
  ['Clips auf die Timeline legen','hinzufügen timeline spur einfügen anordnen reihenfolge','Klick auf das <b>+</b> eines Mediums hängt es hinten an die Hauptspur an. Du kannst Medien auch auf eine bestimmte Stelle der Timeline <b>ziehen</b>. Clips weiter oben liegen im Bild <b>vor</b> den Clips darunter. Mit „+ Videospur“ und „+ Audiospur“ bekommst du mehr Spuren.'],
