@@ -1,0 +1,30 @@
+name: Melonenclips Programm bauen
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'package.json'
+      - 'electron/**'
+      - 'launcher/**'
+      - 'build/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Pakete installieren
+        run: npm install
+      - name: EXE bauen und als Release hochladen
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
