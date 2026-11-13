@@ -1,5 +1,5 @@
 {
-  "version": "1.1.4",
-  "notes": "• 3D-Objekte erscheinen jetzt gerade statt schräg gedreht\n• Werte kannst du jetzt direkt als Zahl eintippen: einfach auf die Zahl neben dem Regler klicken",
+  "version": "1.1.5",
+  "notes": "• 3D-Objekte hinter einem Video werden jetzt auch in der Hauptansicht richtig verdeckt",
   "date": "2026-11-13"
 }
