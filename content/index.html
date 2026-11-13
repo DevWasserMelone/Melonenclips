@@ -211,7 +211,9 @@ details.sec:not([open]) summary:after{content:"▸"}
 .prow select{width:100%}
 .sl{display:flex;align-items:center;gap:8px}
 .sl input{flex:1;min-width:0}
-.sl .val{width:46px;text-align:right;font-size:11px;color:var(--mu);font-variant-numeric:tabular-nums}
+.sl .val{width:54px;flex:none;text-align:right;font-size:11px;color:var(--mu);font-variant-numeric:tabular-nums;background:transparent;border:1px solid transparent;border-radius:5px;padding:2px 4px;font-family:inherit;outline:none;cursor:text}
+.sl .val:hover{border-color:var(--bd,#333);color:var(--tx,#fff)}
+.sl .val:focus{border-color:var(--ac,#22e3d3);background:rgba(255,255,255,.06);color:var(--tx,#fff);text-align:center}
 input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:var(--p3);border-radius:4px;outline:none;margin:8px 0}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--tx);cursor:pointer;border:none}
 input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--tx);border:none;cursor:pointer}
@@ -889,7 +891,7 @@ function placeAuto(c,kind,at,prefTrack){
 }
 function afterAdd(c){ S.selected=c.id; commit(); renderAll(); }
 function addMediaClip(m,at=null,trackId=null){
-  const c=baseClip(m.type); c.mediaId=m.id; c.duration=(m.type==='image'||m.type==='model')?5:m.duration; if(m.type==='model'){ c.prim='glb'; c.spin=0; c.ry=25; }
+  const c=baseClip(m.type); c.mediaId=m.id; c.duration=(m.type==='image'||m.type==='model')?5:m.duration; if(m.type==='model'){ c.prim='glb'; c.spin=0; c.ry=0; }
   const kind=m.type==='audio'?'audio':'visual';
   if(at==null && kind==='visual'){ const main=mainTrack(); c.trackId=main.id; c.start=trackEnd(main.id); }
   else placeAuto(c,kind,at==null?S.t:at,trackId);
@@ -2085,11 +2087,26 @@ function buildTemplatesPane(){
 /* ---------- Properties panel ---------- */
 function section(p,title,open=true){ const d=el('details','sec'); d.open=open; d.append(el('summary',null,title)); const b=el('div','secbody'); d.append(b); p.append(d); return b; }
 function row(parent,label,input){ const r=el('div','prow'); r.append(el('label',null,label),input); parent.append(r); return r; }
+/* Zahlenfeld neben Reglern: anklicken, Zahl tippen, Enter */
+const FREE_KEYS=new Set(['rx','ry','rotation','x','y','z']);
+function numBox(fmt,min,max,step,key,get,set){
+  const f1=parseFloat(String(fmt(1)).replace(',','.')); const fac=(isFinite(f1)&&f1!==0)?f1:1;
+  const out=el('input','val'); out.type='text'; out.spellcheck=false; out.title='Klicken und Zahl eingeben';
+  const show=()=>{ if(document.activeElement!==out) out.value=fmt(+get()); };
+  out.onfocus=()=>{ out.value=String(+(get()*fac).toFixed(2)); out.select(); };
+  const apply=()=>{ const n=parseFloat(out.value.replace(',','.').replace(/[^0-9.\-]/g,'')); if(isFinite(n)){ let v=n/fac; if(!FREE_KEYS.has(key)) v=clamp(v,+min,+max); set(v); } out.blur(); show(); };
+  out.onkeydown=e=>{ e.stopPropagation(); if(e.key==='Enter') apply(); else if(e.key==='Escape'){ out.blur(); show(); }
+    else if(e.key==='ArrowUp'||e.key==='ArrowDown'){ e.preventDefault(); const d=(e.key==='ArrowUp'?1:-1)*(+step||1)*(e.shiftKey?10:1); let v=+get()+d; if(!FREE_KEYS.has(key)) v=clamp(v,+min,+max); set(v); out.value=String(+(v*fac).toFixed(2)); } };
+  out.onblur=()=>{ show(); };
+  out.addEventListener('change',apply);
+  out.show=show; show(); return out;
+}
 function slider(parent,label,obj,key,min,max,step,fmt,onSet){
   fmt=fmt||(v=>String(+v.toFixed(2)));
   const w=el('div','sl'); const inp=el('input'); inp.type='range'; inp.min=min; inp.max=max; inp.step=step; inp.value=obj[key];
-  const out=el('span','val',fmt(+obj[key]));
-  inp.oninput=()=>{ const v=+inp.value; if(onSet) onSet(v); else obj[key]=v; out.textContent=fmt(v); requestRender(); };
+  const setV=v=>{ if(onSet) onSet(v); else obj[key]=v; };
+  const out=numBox(fmt,min,max,step,key,()=>obj[key],v=>{ setV(v); inp.value=v; requestRender(); commit(); });
+  inp.oninput=()=>{ const v=+inp.value; setV(v); out.value=fmt(v); requestRender(); };
   inp.onchange=()=>{ commit(); inp.blur(); };
   w.append(inp,out); row(parent,label,w); return inp;
 }
@@ -2108,12 +2125,12 @@ const kfUI=[];
 function refreshKf(){ for(const f of kfUI) f(); }
 function kfSlider(parent,label,c,key,min,max,step,fmt){
   const w=el('div','sl'); const inp=el('input'); inp.type='range'; inp.min=min; inp.max=max; inp.step=step;
-  const out=el('span','val'); const kb=el('button','kfb'); kb.title='Keyframe für „'+label+'“ setzen/entfernen';
-  const sync=()=>{ const lt=localT(c), v=kv(c,key,lt); if(document.activeElement!==inp) inp.value=v; out.textContent=fmt(+v);
+  const doSet=v=>{ const had=hasKf(c,key); if(had&&!inClip(c)) toast('Abspielposition liegt außerhalb des Clips'); setVal(c,key,v); if(had||hasKf(c,key)) updateClipEl(c); };
+  const out=numBox(fmt,min,max,step,key,()=>kv(c,key,localT(c)),v=>{ doSet(v); commit(); sync(); requestRender(); if(key==='volume' && S.playing) syncMedia(S.t,true); }); const kb=el('button','kfb'); kb.title='Keyframe für „'+label+'“ setzen/entfernen';
+  const sync=()=>{ const lt=localT(c), v=kv(c,key,lt); if(document.activeElement!==inp) inp.value=v; out.show();
     const has=hasKf(c,key); kb.classList.toggle('has',has); kb.classList.toggle('on',has && inClip(c) && kfAt(c,key,lt)>=0); };
   inp.oninput=()=>{ const v=+inp.value;
-    const had=hasKf(c,key); if(had&&!inClip(c)) toast('Abspielposition liegt außerhalb des Clips'); setVal(c,key,v); if(had||hasKf(c,key)) updateClipEl(c);
-    out.textContent=fmt(v); sync(); requestRender(); if(key==='volume' && S.playing) syncMedia(S.t,true); };
+    doSet(v); sync(); requestRender(); if(key==='volume' && S.playing) syncMedia(S.t,true); };
   inp.onchange=()=>{ commit(); inp.blur(); };
   kb.onclick=()=>{ toggleKf(c,key); commit(); updateClipEl(c); refreshKf(); requestRender(); };
   if(S.simple) kb.style.display='none';
@@ -2221,7 +2238,7 @@ function cropSection(p,c){
 }
 function transformSection(p,c){
   const b=section(p,S.simple?'Größe & Position':'Transformieren');
-  if(S.simple) b.append(el('p','note','Direkt im Vorschaubild: ziehen = verschieben, Ecken = Größe, runder Griff = drehen.'));
+  if(S.simple) b.append(el('p','note','Direkt im Vorschaubild: ziehen = verschieben, Ecken = Größe, runder Griff = drehen. Zahlen rechts anklicken zum Eintippen.'));
   if(!S.simple) kfNav(b,c);
   kfSlider(b,'Größe',c,'scale',0.05,4,0.01,pct);
   if(!S.simple){ kfSlider(b,'Position X',c,'x',-1,1,0.001,v=>Math.round(v*100)+'');
@@ -2388,7 +2405,7 @@ function motionSection(p,c){
   b.append(el('p','note','Wiggle (zufällige Bewegung)'));
   slider(b,'Frequenz',c,'wigF',0.1,12,0.1,v=>v.toFixed(1)+' Hz'); slider(b,'Position',c,'wigA',0,30,0.5,v=>v+'%'); slider(b,'Drehung',c,'wigR',0,45,0.5,v=>v+'°');
 }
-function addModel(prim,at=null){ const c=baseClip('model'); c.prim=prim; c.duration=5; c.spin=0; c.rx=prim==='plane'?-60:20; c.ry=prim==='plane'?0:30; c.mcolor=['#22e3d3','#ff3d8b','#ffd400','#7c5cff','#ff7a59','#4ade80'][Math.floor(Math.random()*6)]; placeAuto(c,'visual',at==null?S.t:at,null); S.clips.push(c); afterAdd(c); }
+function addModel(prim,at=null){ const c=baseClip('model'); c.prim=prim; c.duration=5; c.spin=0; c.rx=0; c.ry=0; c.mcolor=['#22e3d3','#ff3d8b','#ffd400','#7c5cff','#ff7a59','#4ade80'][Math.floor(Math.random()*6)]; placeAuto(c,'visual',at==null?S.t:at,null); S.clips.push(c); afterAdd(c); }
 function addCamera(){ const c=baseClip('camera'); c.duration=Math.max(3,(dur()||5)-S.t); placeAuto(c,'visual',S.t,null); S.clips.push(c); afterAdd(c); toast('Kamera hinzugefügt – wähle rechts eine Kamerafahrt oder setze Keyframes'); }
 function addParticles(k,at=null){ const c=baseClip('particles'); c.pPreset=k; c.duration=k==='explosion'?2:5; if(['funken','feuer','rauch'].includes(k)) c.y=0.3; placeAuto(c,'visual',at==null?S.t:at,null); S.clips.push(c); afterAdd(c); }
 function build3DPane(){
