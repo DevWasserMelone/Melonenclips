@@ -1,7 +1,7 @@
 {
   "name": "melonenclips",
   "productName": "Melonenclips",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Melonenclips – Video-Editor mit 3D, Effekten und Launcher",
   "main": "electron/main.js",
   "author": "Melonenclips",
@@ -33,7 +33,14 @@
       "output": "dist"
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.png",
       "artifactName": "Melonenclips-Setup-${version}.${ext}"
     },
@@ -47,7 +54,10 @@
       "deleteAppDataOnUninstall": false
     },
     "publish": [
-      { "provider": "github", "releaseType": "release" }
+      {
+        "provider": "github",
+        "releaseType": "release"
+      }
     ]
   }
 }

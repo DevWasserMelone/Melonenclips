@@ -67,7 +67,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:13px/1.
 </head>
 <body>
 <canvas id="hero"></canvas>
-<div id="bar"><div class="t"><span class="logo"></span>Melonenclips Launcher</div><div class="sp"></div><button id="pubBtn" title="Neue Version für alle veröffentlichen (Strg+Umschalt+P)">🚀 Update veröffentlichen</button><button id="min" title="Minimieren">–</button><button id="cls" class="x" title="Schließen">✕</button></div>
+<div id="bar"><div class="t"><span class="logo"></span>Melonenclips Launcher</div><div class="sp"></div><button id="pubBtn" title="Neue Version für alle veröffentlichen">🚀 Update veröffentlichen</button><button id="min" title="Minimieren">–</button><button id="cls" class="x" title="Schließen">✕</button></div>
 <div id="main">
   <div id="title">
     <h1>Melonenclips</h1>
@@ -193,8 +193,8 @@ $('#pubGo').onclick=async()=>{
   catch(e){ lg.className='err'; lg.textContent=String(e.message||e).replace(/^Error invoking remote method '[^']+': (Error: )?/,''); }
   finally{ $('#pubGo').disabled=false; }
 };
-N.pubConfig().then(c=>{ if(c.hasToken) $('#pubBtn').style.display='block'; });
-addEventListener('keydown',e=>{ if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='p'){ $('#pubBtn').style.display='block'; openPub(); } if(e.key==='Escape') $('#pub').classList.remove('open'); });
+N.info().then(i=>{ if(i.dev) $('#pubBtn').style.display='block'; else document.getElementById('pub').remove(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ const p=$('#pub'); if(p) p.classList.remove('open'); } });
 
 /* Hintergrund-Animation */
 (()=>{ const c=$('#hero'), g=c.getContext('2d'); let W,H; const rs=()=>{ W=c.width=innerWidth; H=c.height=innerHeight; }; rs(); addEventListener('resize',rs);

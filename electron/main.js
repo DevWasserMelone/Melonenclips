@@ -178,18 +178,24 @@ ipcMain.handle('content:download', async () => {
 });
 
 /* ---------- Veröffentlichen (nur Entwickler) ---------- */
+// Sichtbar nur im Entwicklermodus: Start mit --entwickler oder wenn auf diesem PC schon ein Token gespeichert ist.
+const isDev = () => !app.isPackaged || process.argv.includes('--entwickler') || !!loadToken();
+const devOnly = () => { if (!isDev()) throw new Error('Nicht verfügbar'); };
 ipcMain.handle('pub:config', async () => {
+  devOnly();
   const ri = repoInfo(); let online = null;
   if (ri) { try { online = JSON.parse((await ghRaw(ri, 'content/version.json')).toString('utf8')).version; } catch (e) { /* */ } }
   return { repo: ri ? `${ri.owner}/${ri.repo}` : '', hasToken: !!loadToken(), online, local: localVer() };
 });
-ipcMain.handle('pub:save', (_e, cfg) => { saveConfig(cfg); return true; });
+ipcMain.handle('pub:save', (_e, cfg) => { devOnly(); saveConfig(cfg); return true; });
 ipcMain.handle('pub:pick', async (e) => {
+  devOnly();
   const r = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), { title: 'Neue Editor-Datei wählen', filters: [{ name: 'Melonenclips-Editor', extensions: ['html'] }], properties: ['openFile'] });
   if (r.canceled || !r.filePaths[0]) return null;
   const f = r.filePaths[0]; return { path: f, name: path.basename(f), size: fs.statSync(f).size };
 });
 ipcMain.handle('pub:publish', async (_e, { file, version, notes, rebuild }) => {
+  devOnly();
   const ri = repoInfo(); const token = loadToken();
   if (!ri) throw new Error('Bitte zuerst dein Repository eintragen.');
   if (!token) throw new Error('Bitte zuerst deinen GitHub-Token eintragen.');
@@ -224,7 +230,7 @@ ipcMain.handle('pub:publish', async (_e, { file, version, notes, rebuild }) => {
 });
 
 /* ---------- Sonstiges ---------- */
-ipcMain.handle('app:info', () => ({ version: localVer(), appVersion: app.getVersion(), packaged: app.isPackaged }));
+ipcMain.handle('app:info', () => ({ version: localVer(), appVersion: app.getVersion(), packaged: app.isPackaged, dev: isDev() }));
 ipcMain.handle('app:start', () => createEditor());
 ipcMain.handle('app:quit', () => app.quit());
 ipcMain.handle('app:open', (_e, url) => { if (/^https:\/\//.test(url)) shell.openExternal(url); });
