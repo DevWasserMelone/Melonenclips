@@ -26,15 +26,16 @@ header{display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--
 .btn.dg:hover{color:var(--dg);border-color:var(--dg)}
 .btn.sm{padding:4px 8px;font-size:12px}
 .i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
-#mid{min-width:0;display:grid;grid-template-columns:336px minmax(0,1fr) 300px;min-height:0}
+#mid{min-width:0;display:grid;grid-template-columns:360px minmax(0,1fr) 300px;min-height:0}
 aside{background:var(--p1);min-height:0;display:flex;flex-direction:column}
-#left{border-right:1px solid var(--line)}
+#left{border-right:1px solid var(--line);flex-direction:row}
 #right{border-left:1px solid var(--line);overflow:auto}
-.tabs{display:flex;border-bottom:1px solid var(--line);flex:none}
-.tabs button{flex:1;min-width:0;background:none;border:none;color:var(--mu);padding:8px 0 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font:inherit;font-size:9.5px;border-bottom:2px solid transparent}
+.tabs{display:flex;flex-direction:column;width:66px;flex:none;border-right:1px solid var(--line);overflow-y:auto;padding:4px 0;background:#121419}
+.tabs button{flex:none;background:none;border:none;color:var(--mu);padding:9px 0 7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font:inherit;font-size:10.5px;border-left:3px solid transparent;border-radius:0 8px 8px 0;margin:1px 4px 1px 0}
 .tabs button:hover{color:var(--tx)}
-.tabs button.act{color:var(--ac);border-bottom-color:var(--ac)}
-.tabs .i{width:18px;height:18px}
+.tabs button.act{color:var(--ac);border-left-color:var(--ac);background:rgba(34,227,211,.08)}
+.tabs .tsep{flex:1}
+.tabs .i{width:20px;height:20px}
 .pane{flex:1;overflow:auto;padding:12px;display:none}
 .pane.act{display:block}
 .drop{display:flex;flex-direction:column;align-items:center;gap:6px;border:1.5px dashed #3a4050;border-radius:10px;padding:16px;color:var(--mu);text-align:center;cursor:pointer;margin-bottom:12px}
@@ -139,6 +140,25 @@ textarea{width:100%;resize:vertical;min-height:64px}
 .kfnav .lbl2{flex:1;font-size:12px;color:var(--mu)}
 .kfnav .btn.kfall .i{color:#ffd400}
 #cv.picking{cursor:crosshair}
+#stage{padding-top:52px}
+#ovl{position:absolute;inset:0;pointer-events:none;z-index:2;width:100%;height:100%}
+#ptool{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:rgba(21,23,29,.94);border:1px solid var(--line);border-radius:10px;padding:3px;z-index:3;box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap}
+#ptool .pt{display:flex;align-items:center;gap:5px;background:none;border:none;color:var(--tx);padding:6px 9px;border-radius:7px;cursor:pointer;font:inherit;font-size:12px}
+#ptool .pt:hover{background:var(--p3)}
+#ptool .pt.on{background:rgba(34,227,211,.16);color:var(--ac)}
+#ptool .pt:disabled{opacity:.3;cursor:default;background:none}
+#ptool .psep{width:1px;height:20px;background:var(--line);margin:0 3px}
+#ptip{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--mu);white-space:nowrap;pointer-events:none}
+.hlist{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.hitem{background:var(--p2);border:1px solid var(--line);border-radius:8px}
+.hitem summary{padding:9px 11px;cursor:pointer;font-weight:600;list-style:none}
+.hitem summary::-webkit-details-marker{display:none}
+.hitem[open] summary{color:var(--ac)}
+.hbody{padding:0 11px 11px;color:#c9cede;font-size:12.5px;line-height:1.55}
+.hbody ol,.hbody ul{padding-left:18px;margin:4px 0}
+.modesw{display:flex;background:var(--p2);border:1px solid var(--line);border-radius:8px;padding:2px}
+.modesw button{background:none;border:none;color:var(--mu);padding:4px 10px;border-radius:6px;cursor:pointer;font:inherit;font-size:12px}
+.modesw button.on{background:var(--p3);color:var(--tx)}
 .marker{position:absolute;bottom:0;width:0;height:0;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid #ff7a59;pointer-events:none}
 .sgrid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .elem{height:52px;border-radius:8px;background:var(--p2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;color:#ff3d8b;user-select:none}
@@ -193,7 +213,7 @@ input[type=color]{width:38px;height:26px;border:1px solid var(--line);border-rad
 ::-webkit-scrollbar-thumb{background:#2f3441;border-radius:6px;border:2px solid var(--p1)}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-corner{background:var(--p1)}
-@media (max-width:1100px){#mid{grid-template-columns:240px minmax(0,1fr) 260px}}
+@media (max-width:1250px){#mid{grid-template-columns:320px minmax(0,1fr) 270px}}
 </style>
 </head>
 <body>
@@ -205,6 +225,8 @@ input[type=color]{width:38px;height:26px;border:1px solid var(--line);border-rad
     <span class="note" id="saveState"></span>
     <span class="note" id="verLbl"></span>
     <button class="btn sm hidden" id="logBtn" title="Kopiert das Fehlerprotokoll, damit du es auf Discord schicken kannst">Fehler melden</button>
+    <div class="modesw" title="Einfach: nur das Wichtigste · Profi: alle Einstellungen"><button id="mSimple">Einfach</button><button id="mPro">Profi</button></div>
+    <button class="btn ic" id="helpBtn" title="Hilfe (F1)"></button>
     <button class="btn sm" id="newBtn" title="Neues, leeres Projekt">Neues Projekt</button>
     <button class="btn ic" id="undoBtn" title="Rückgängig (Strg+Z)"></button>
     <button class="btn ic" id="redoBtn" title="Wiederholen (Strg+Y)"></button>
@@ -213,16 +235,7 @@ input[type=color]{width:38px;height:26px;border:1px solid var(--line);border-rad
 
   <div id="mid">
     <aside id="left">
-      <nav class="tabs" id="tabs">
-        <button data-tab="media" class="act"></button>
-        <button data-tab="rec"></button>
-        <button data-tab="text"></button>
-        <button data-tab="elements"></button>
-        <button data-tab="3d"></button>
-        <button data-tab="sticker"></button>
-        <button data-tab="effects"></button>
-        <button data-tab="templates"></button>
-      </nav>
+      <nav class="tabs" id="tabs"></nav>
       <div class="pane act" id="pane-media">
         <label class="drop" id="importLbl">
           <input type="file" id="fileIn" multiple accept="video/*,image/*,audio/*" hidden>
@@ -245,12 +258,16 @@ input[type=color]{width:38px;height:26px;border:1px solid var(--line);border-rad
       <div class="pane" id="pane-rec"></div>
       <div class="pane" id="pane-elements"></div>
       <div class="pane" id="pane-3d"></div>
+      <div class="pane" id="pane-help"></div>
       <div class="pane" id="pane-templates"></div>
     </aside>
 
     <section id="center">
       <div id="stage">
         <canvas id="cv" width="1920" height="1080"></canvas>
+        <canvas id="ovl"></canvas>
+        <div id="ptool" class="hidden"></div>
+        <div id="ptip" class="hidden"></div>
         <div id="empty">
           <div class="big">Dein Projekt ist noch leer</div>
           <div>Importiere Videos, Bilder oder Musik, um loszulegen.</div>
@@ -396,6 +413,11 @@ const IC = {
  diamond:'<path d="M12 3l9 9-9 9-9-9z"/>',
  freeze:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9v6M14 9v6"/>',
  rec:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/>',
+ help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/>',
+ hand:'<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L3.5 14a1.5 1.5 0 0 1 2.5-1.6L8 15"/>',
+ rot3d:'<path d="M12 3v18M3 12c0-3 4-5 9-5s9 2 9 5-4 5-9 5"/><path d="m18 14 3-2-2-3"/>',
+ depth:'<path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>',
+ camera:'<rect x="2" y="7" width="14" height="11" rx="2"/><path d="m16 11 6-3v10l-6-3z"/>',
  cube:'<path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/>',
  shapes:'<rect x="3" y="3" width="8" height="8" rx="1"/><circle cx="17" cy="17" r="4"/><path d="M17 3l4 7h-8z"/>',
  layout:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
@@ -1126,11 +1148,7 @@ function drawOverlay(W,H){
     ctx.fillStyle='#ffd400'; for(const kt of kfTimes(sc)){ const P=xf(sc,kt); ctx.save(); ctx.translate(W/2+P.x*W,H/2+P.y*H); ctx.rotate(Math.PI/4); ctx.fillRect(-lw*3,-lw*3,lw*6,lw*6); ctx.restore(); }
     ctx.restore();
   }
-  const b=boxes.get(S.selected); if(!b) return;
-  ctx.save(); ctx.translate(b.cx,b.cy); ctx.rotate(b.rot); ctx.strokeStyle='#ffffff'; ctx.lineWidth=lw; ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=lw*2;
-  ctx.strokeRect(-b.w/2,-b.h/2,b.w,b.h);
-  ctx.fillStyle='#fff'; const hs=lw*4; for(const [x,y] of [[-1,-1],[1,-1],[-1,1],[1,1]]) ctx.fillRect(x*b.w/2-hs/2,y*b.h/2-hs/2,hs,hs);
-  ctx.restore();
+  drawSel();
 }
 let renderQueued=false;
 function requestRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(!S.playing){ syncMedia(S.t,false); render(S.t); } }); }
@@ -1694,7 +1712,7 @@ window.addEventListener('drop',e=>{ e.preventDefault(); if(e.dataTransfer.files 
 function select(id){
   S.selected=id;
   tracksEl.querySelectorAll('.clip').forEach(x=>x.classList.toggle('sel',x.dataset.id===id));
-  renderProps(); renderEffects(); requestRender();
+  renderProps(); renderEffects(); updatePtool(); requestRender();
 }
 function splitClip(c,t){
   if(!c || t<=c.start+0.04 || t>=c.start+c.duration-0.04) return null;
@@ -2021,6 +2039,7 @@ function kfSlider(parent,label,c,key,min,max,step,fmt){
     out.textContent=fmt(v); sync(); requestRender(); if(key==='volume' && S.playing) syncMedia(S.t,true); };
   inp.onchange=()=>{ commit(); inp.blur(); };
   kb.onclick=()=>{ toggleKf(c,key); commit(); updateClipEl(c); refreshKf(); requestRender(); };
+  if(S.simple) kb.style.display='none';
   w.append(inp,out,kb); row(parent,label,w); kfUI.push(sync); sync(); return inp;
 }
 function kfNav(parent,c){
@@ -2049,8 +2068,8 @@ function renderProps(){
   if(c.type==='camera') cameraSection(p,c);
   if(c.type==='particles') particleSection(p,c);
   if(!['audio','effect','camera'].includes(c.type)) transformSection(p,c);
-  if(c.type==='video'||c.type==='image'){ cropSection(p,c); adjustSection(p,c); chromaSection(p,c); }
-  if(!['audio','effect','camera'].includes(c.type)) motionSection(p,c);
+  if(c.type==='video'||c.type==='image'){ if(!S.simple) cropSection(p,c); adjustSection(p,c); chromaSection(p,c); }
+  if(!S.simple && !['audio','effect','camera'].includes(c.type)) motionSection(p,c);
   if(!['audio','camera'].includes(c.type)) animSection(p,c);
   if(isAV(c)){ speedSection(p,c); audioSection(p,c); }
   if(['image','text','shape','effect','model','camera','particles'].includes(c.type)){ const b=section(p,'Dauer'); slider(b,'Länge',c,'duration',0.2,60,0.1,v=>v.toFixed(1)+'s',v=>{ let nd=v; let maxE=Infinity; for(const o of S.clips) if(o.trackId===c.trackId&&o.id!==c.id&&o.start>=c.start+EPS) maxE=Math.min(maxE,o.start); nd=Math.min(nd,maxE-c.start); c.duration=nd; updateClipEl(c); updateTimeLabels(); $('#pinfo').textContent=`Start ${fmtTime(c.start)} · Länge ${fmtTime(c.duration)}`; }); }
@@ -2113,11 +2132,12 @@ function cropSection(p,c){
   slider(b,'Schatten',c,'dshadow',0,80,1);
 }
 function transformSection(p,c){
-  const b=section(p,'Transformieren');
-  kfNav(b,c);
-  kfSlider(b,'Skalierung',c,'scale',0.05,4,0.01,pct);
-  kfSlider(b,'Position X',c,'x',-1,1,0.001,v=>Math.round(v*100)+'');
-  kfSlider(b,'Position Y',c,'y',-1,1,0.001,v=>Math.round(v*100)+'');
+  const b=section(p,S.simple?'Größe & Position':'Transformieren');
+  if(S.simple) b.append(el('p','note','Direkt im Vorschaubild: ziehen = verschieben, Ecken = Größe, runder Griff = drehen.'));
+  if(!S.simple) kfNav(b,c);
+  kfSlider(b,'Größe',c,'scale',0.05,4,0.01,pct);
+  if(!S.simple){ kfSlider(b,'Position X',c,'x',-1,1,0.001,v=>Math.round(v*100)+'');
+  kfSlider(b,'Position Y',c,'y',-1,1,0.001,v=>Math.round(v*100)+''); }
   kfSlider(b,'Drehung',c,'rotation',-360,360,1,v=>Math.round(v)+'°');
   kfSlider(b,'Deckkraft',c,'opacity',0,1,0.01,pct);
   const can3d=['video','image','text','shape'].includes(c.type) && c.shape!=='bg';
@@ -2129,11 +2149,11 @@ function transformSection(p,c){
   }
   if(c.type==='video'||c.type==='image'){ selectRow(b,'Füllmodus',c,'fit',[['contain','Einpassen'],['cover','Ausfüllen (Zuschnitt)']]);
     const lc=el('div','chips'); for(const [k,l] of [['full','Vollbild'],['fit','Einpassen'],['left','Links'],['right','Rechts'],['top','Oben'],['bottom','Unten'],['pip-tr','Bild-in-Bild ↗'],['pip-tl','Bild-in-Bild ↖'],['pip-br','Bild-in-Bild ↘'],['pip-bl','Bild-in-Bild ↙']]) lc.append(chip(l,false,()=>{ applyLayout(c,k); commit(); updateClipEl(c); renderProps(); requestRender(); })); row(b,'Layout',lc); }
-  selectRow(b,'Mischmodus',c,'blend',BLENDS);
+  if(!S.simple) selectRow(b,'Mischmodus',c,'blend',BLENDS);
   const ch=el('div','chips'); toggleChip(ch,'Horizontal spiegeln',c,'flipH'); row(b,'Spiegeln',ch);
   const r=el('div','brow'); r.append(btn('Zurücksetzen',()=>{ Object.assign(c,{x:0,y:0,scale:1,rotation:0,opacity:1,flipH:false}); if(c.kf) for(const k of KF_KEYS) delete c.kf[k]; commit(); updateClipEl(c); renderProps(); requestRender(); }));
   b.append(r);
-  b.append(el('p','note','Keyframes: Abspielposition setzen → ◆ klicken → Abspielposition weiter → Wert ändern. Im Vorschaufenster ziehen zum Verschieben, Mausrad zum Skalieren.'));
+  if(!S.simple) b.append(el('p','note','Keyframes: Abspielposition setzen → ◆ klicken → Abspielposition weiter → Wert ändern. Im Vorschaufenster ziehen zum Verschieben, an den Ecken skalieren, am runden Griff drehen.'));
 }
 function chromaSection(p,c){
   const b=section(p,'Freistellen (Green Screen)',!!c.ck.on), k=c.ck;
@@ -2190,6 +2210,7 @@ function audioSection(p,c){
   if(c.type==='video') r.append(btn('Audio trennen',detachAudio,'music'));
   r.append(btn('Normalisieren',()=>{ const m=mediaById(c.mediaId); if(!m||!m.peakMax){ toast('Ton wird noch analysiert …'); return; } c.volume=clamp(0.95/m.peakMax,0,2); if(c.kf) delete c.kf.volume; commit(); renderProps(); toast('Lautstärke angepasst: '+Math.round(c.volume*100)+'%'); }));
   b.append(r);
+  if(S.simple){ const sx=section(p,'Stimm-Effekt',false); selectRow(sx,'Effekt',c,'afx',AFX,()=>{ updateClipEl(c); if(S.playing) syncMedia(S.t,true); }); return; }
   const fb=section(p,'Audio-Effekte & Equalizer',false);
   selectRow(fb,'Stimm-Effekt',c,'afx',AFX,()=>{ updateClipEl(c); if(S.playing) syncMedia(S.t,true); });
   slider(fb,'Bässe',c.eq,'low',-15,15,0.5,v=>(v>0?'+':'')+v+' dB'); slider(fb,'Mitten',c.eq,'mid',-15,15,0.5,v=>(v>0?'+':'')+v+' dB'); slider(fb,'Höhen',c.eq,'high',-15,15,0.5,v=>(v>0?'+':'')+v+' dB');
@@ -2211,7 +2232,7 @@ function projectProps(p){
   slider(lb,'Stärke',L,'int',0,3,0.05,pct); slider(lb,'Umgebung',L,'amb',0,1.5,0.01,pct); colorRow(lb,'Lichtfarbe',L,'col');
   const k=section(p,'Tastenkürzel');
   const kb=el('div','kb');
-  for(const [a,d] of [['Leertaste','Abspielen / Pause'],['S','Teilen'],['Entf','Clip löschen'],['⇧ + Entf','Löschen & Lücke schließen'],['Strg+D','Duplizieren'],['K','Keyframe setzen/entfernen'],['M','Marker setzen/entfernen'],['Strg+C / V','Clip kopieren / einfügen'],['F','Standbild einfügen'],['Strg+Z / Y','Rückgängig / Wiederholen'],['← →','1 Bild (mit ⇧: 1 Sek.)'],['Pos1 / Ende','Anfang / Ende'],['+ / −','Timeline zoomen'],['Esc','Auswahl aufheben']]){ const kk=el('kbd',null,a); kb.append(kk,el('span',null,d)); }
+  for(const [a,d] of [['Leertaste','Abspielen / Pause'],['S','Teilen'],['Entf','Clip löschen'],['⇧ + Entf','Löschen & Lücke schließen'],['Strg+D','Duplizieren'],['K','Keyframe setzen/entfernen'],['M','Marker setzen/entfernen'],['V / R / C','Werkzeug: Bewegen / 3D drehen / Kamera'],['F1','Hilfe'],['Strg+C / V','Clip kopieren / einfügen'],['F','Standbild einfügen'],['Strg+Z / Y','Rückgängig / Wiederholen'],['← →','1 Bild (mit ⇧: 1 Sek.)'],['Pos1 / Ende','Anfang / Ende'],['+ / −','Timeline zoomen'],['Esc','Auswahl aufheben']]){ const kk=el('kbd',null,a); kb.append(kk,el('span',null,d)); }
   k.append(kb);
   const h=section(p,'So geht’s',false);
   h.append(el('p','note','1. Medien links importieren und mit + oder per Ziehen auf die Timeline bringen. 2. Clips verschieben, an den Rändern kürzen, mit S teilen. 3. Clip anklicken → rechts Text, Größe, Filter, Animation, Tempo und Ton anpassen. 4. Oben rechts exportieren.'));
@@ -2303,8 +2324,9 @@ function build3DPane(){
 /* ---------- Left panels ---------- */
 function switchTab(name){ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('act',b.dataset.tab===name)); document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('act',p.id==='pane-'+name)); }
 function buildStaticPanes(){
-  const tabs=[['media','folder','Medien'],['rec','rec','Aufnahme'],['text','text','Text'],['elements','shapes','Elemente'],['3d','cube','3D'],['sticker','smile','Sticker'],['effects','fx','Effekte'],['templates','layout','Vorlagen']];
-  document.querySelectorAll('#tabs button').forEach((b,i)=>{ b.innerHTML=ic(tabs[i][1])+tabs[i][2]; b.onclick=()=>switchTab(b.dataset.tab); });
+  const tabs=[['media','folder','Medien'],['text','text','Text'],['sticker','smile','Sticker'],['effects','fx','Effekte'],['3d','cube','3D'],['elements','shapes','Elemente'],['templates','layout','Vorlagen'],['rec','rec','Aufnahme'],['-'],['help','help','Hilfe']];
+  const nav=$('#tabs'); nav.innerHTML='';
+  for(const [k,i,l] of tabs){ if(k==='-'){ nav.append(el('div','tsep')); continue; } const b=el('button'); b.dataset.tab=k; b.innerHTML=ic(i)+l; if(k==='media') b.classList.add('act'); b.onclick=()=>switchTab(k); nav.append(b); }
   const tg=$('#textGrid');
   TEXT_PRESETS.forEach(([name,p],i)=>{
     const d=Object.assign(TEXT_DEF(),p); const t=el('div','tpre',name); t.draggable=true;
@@ -2318,7 +2340,7 @@ function buildStaticPanes(){
     t.ondragstart=e=>{ e.dataTransfer.setData('text/x-cf',JSON.stringify({kind:'text',i})); };
     tg.append(t);
   });
-  buildElementsPane(); buildTemplatesPane(); renderRecPane(); build3DPane();
+  buildElementsPane(); buildTemplatesPane(); renderRecPane(); build3DPane(); buildHelpPane();
   const sg=$('#stickerGrid');
   for(const s of STICKERS){ const d=el('div','stk',s); d.draggable=true; d.onclick=()=>addSticker(s); d.ondragstart=e=>e.dataTransfer.setData('text/x-cf',JSON.stringify({kind:'sticker',e:s})); sg.append(d); }
 }
@@ -2358,32 +2380,182 @@ function renderEffects(){
   p.append(el('p','note','Wird zwischen dem ausgewählten Clip und dem direkt anschließenden Clip auf derselben Spur gesetzt.'));
 }
 
-/* ---------- Preview interaction ---------- */
+/* ---------- Preview interaction (CapCut-style handles + tools) ---------- */
+const stageEl=$('#stage');
 function canvasPt(e){ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*cv.width/r.width, y:(e.clientY-r.top)*cv.height/r.height}; }
+function screenScale(){ const r=cv.getBoundingClientRect(); return r.width?cv.width/r.width:1; }
 function hitBox(b,p){ const dx=p.x-b.cx, dy=p.y-b.cy, co=Math.cos(-b.rot), si=Math.sin(-b.rot); const lx=dx*co-dy*si, ly=dx*si+dy*co; return Math.abs(lx)<=b.w/2 && Math.abs(ly)<=b.h/2; }
 function hitTest(p){
   const sb=boxes.get(S.selected); if(sb && hitBox(sb,p)) return selClip();
-  const act=visibleClipsAt(S.t).reverse(); for(const c of act){ const b=boxes.get(c.id); if(b && hitBox(b,p)) return c; } return null;
+  const act=visibleClipsAt(S.t).reverse(); for(const c of act){ if(c.type==='shape'&&c.shape==='bg') continue; const b=boxes.get(c.id); if(b && hitBox(b,p)) return c; }
+  for(const c of act){ const b=boxes.get(c.id); if(b && hitBox(b,p)) return c; } return null;
 }
-cv.addEventListener('pointerdown',e=>{
-  if(S.exporting) return;
-  const p0=canvasPt(e);
+const canTransform=c=>!!c && !['effect','camera','audio'].includes(c.type) && !(c.type==='shape'&&c.shape==='bg');
+const canRot3d=c=>!!c && (c.type==='model' || (['video','image','text','shape'].includes(c.type) && c.shape!=='bg'));
+function handlesOf(b,sf){
+  const co=Math.cos(b.rot), si=Math.sin(b.rot), P=(lx,ly)=>({x:b.cx+lx*co-ly*si, y:b.cy+lx*si+ly*co});
+  const hs=[]; for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]) hs.push(Object.assign(P(sx*b.w/2,sy*b.h/2),{kind:'scale',sx,sy}));
+  hs.push(Object.assign(P(0,-b.h/2-30*sf),{kind:'rot'})); return hs;
+}
+S.tool='move'; S.drag=null;
+function setTool(t){ S.tool=t; updatePtool(); stageEl.style.cursor=t==='camera'?'grab':''; requestRender();
+  const tips={move:'Ziehen = verschieben · Ecken = Größe · runder Griff = drehen',rot3d:'Im Bild ziehen = in 3D drehen (links/rechts, hoch/runter)',depth:'Hoch/runter ziehen = näher ran oder weiter weg',camera:'Ziehen = Kamera schwenken · Mausrad = zoomen · Umschalt+Ziehen = verschieben'};
+  $('#ptip').textContent=tips[t]||''; }
+function activeCamera(create){
+  let cam=null; for(const c of visibleClipsAt(S.t)) if(c.type==='camera') cam=c;
+  if(!cam && create){ cam=baseClip('camera'); cam.start=0; cam.duration=Math.max(5,dur()); placeAuto(cam,'visual',0,null); S.clips.push(cam); commit(); renderTimeline(); toast('3D-Kamera hinzugefügt – sie filmt alle 3D-Sachen'); }
+  return cam;
+}
+function startDrag(e,info){ S.drag=info; try{ stageEl.setPointerCapture(e.pointerId); }catch(err){} }
+stageEl.addEventListener('pointerdown',e=>{
+  if(S.exporting||e.button!==0||e.target.closest('#ptool,#empty')) return;
+  const p0=canvasPt(e), sf=screenScale();
   if(S.pick){ const pc=clipById(S.pick); S.pick=null; cv.classList.remove('picking'); if(pc){
       S.noKey=true; syncMedia(S.t,false); render(S.t); const px=ctx.getImageData(Math.floor(p0.x),Math.floor(p0.y),1,1).data; S.noKey=false;
       pc.ck.color='#'+[px[0],px[1],px[2]].map(v=>v.toString(16).padStart(2,'0')).join(''); pc.ck.on=true; commit(); renderProps(); requestRender(); toast('Farbe übernommen'); }
     return; }
+  if(S.tool==='camera'){ const cam=activeCamera(true); const lt=localT(cam);
+    startDrag(e,{mode:e.shiftKey?'campan':'cam',c:cam,p0,e0:{x:e.clientX,y:e.clientY},v:{oy:kv(cam,'orbitY',lt),ox:kv(cam,'orbitX',lt),px:kv(cam,'panX',lt),py:kv(cam,'panY',lt)}}); stageEl.style.cursor='grabbing'; return; }
+  const sc=selClip(), sb=sc&&boxes.get(sc.id);
+  if(sc && sb && canTransform(sc) && S.tool==='move'){
+    const h=handlesOf(sb,sf).find(h=>Math.hypot(h.x-p0.x,h.y-p0.y)<=13*sf);
+    if(h){ const lt=localT(sc); startDrag(e,{mode:h.kind,c:sc,p0,cx:sb.cx,cy:sb.cy,s0:kv(sc,'scale',lt),r0:kv(sc,'rotation',lt),d0:Math.max(1,Math.hypot(p0.x-sb.cx,p0.y-sb.cy)),a0:Math.atan2(p0.y-sb.cy,p0.x-sb.cx)}); return; }
+  }
   const c=hitTest(p0); if(!c){ select(null); return; }
   if(S.selected!==c.id) select(c.id);
-  const lt0=localT(c), ox=kv(c,'x',lt0), oy=kv(c,'y',lt0); let moved=false; cv.setPointerCapture(e.pointerId);
-  const mv=ev=>{ const q=canvasPt(ev); let nx=ox+(q.x-p0.x)/cv.width, ny=oy+(q.y-p0.y)/cv.height; S.guide={x:false,y:false};
-    if(Math.abs(nx)<0.012){ nx=0; S.guide.x=true; } if(Math.abs(ny)<0.012){ ny=0; S.guide.y=true; }
-    setVal(c,'x',nx); setVal(c,'y',ny); moved=true; refreshKf(); requestRender(); };
-  const up=()=>{ cv.removeEventListener('pointermove',mv); cv.removeEventListener('pointerup',up); S.guide=null; if(moved){ commit(); updateClipEl(c); refreshKf(); } requestRender(); };
-  cv.addEventListener('pointermove',mv); cv.addEventListener('pointerup',up);
+  if(!canTransform(c)) return;
+  const lt=localT(c); let mode=S.tool; if(e.altKey && canRot3d(c)) mode='rot3d';
+  if((mode==='rot3d'||mode==='depth') && !canRot3d(c)) mode='move';
+  if((mode==='rot3d'||mode==='depth') && c.type!=='model' && !c.is3d){ c.is3d=true; updateClipEl(c); renderProps(); toast('Clip ist jetzt eine 3D-Ebene'); }
+  startDrag(e,{mode,c,p0,e0:{x:e.clientX,y:e.clientY},v:{x:kv(c,'x',lt),y:kv(c,'y',lt),rx:kv(c,'rx',lt),ry:kv(c,'ry',lt),z:kv(c,'z',lt)}});
 });
+stageEl.addEventListener('pointermove',e=>{
+  const d=S.drag, p=canvasPt(e), sf=screenScale();
+  if(!d){ // hover cursor
+    if(S.tool==='camera'){ stageEl.style.cursor='grab'; return; }
+    const sc=selClip(), sb=sc&&boxes.get(sc.id); let cur='';
+    if(sc&&sb&&canTransform(sc)&&S.tool==='move'){ const h=handlesOf(sb,sf).find(h=>Math.hypot(h.x-p.x,h.y-p.y)<=13*sf); if(h) cur=h.kind==='rot'?'grab':((h.sx*h.sy>0)?'nwse-resize':'nesw-resize'); }
+    if(!cur){ const c=hitTest(p); if(c&&canTransform(c)) cur=S.tool==='move'?'move':(S.tool==='depth'?'ns-resize':'grab'); }
+    stageEl.style.cursor=cur; return; }
+  const c=d.c; d.moved=true; const dxs=e.clientX-(d.e0?d.e0.x:0), dys=e.clientY-(d.e0?d.e0.y:0);
+  switch(d.mode){
+    case 'move':{ let nx=d.v.x+(p.x-d.p0.x)/cv.width, ny=d.v.y+(p.y-d.p0.y)/cv.height; S.guide={x:false,y:false};
+      if(Math.abs(nx)<0.012){ nx=0; S.guide.x=true; } if(Math.abs(ny)<0.012){ ny=0; S.guide.y=true; } setVal(c,'x',nx); setVal(c,'y',ny); S.dragLabel=null; break; }
+    case 'scale':{ const dd=Math.hypot(p.x-d.cx,p.y-d.cy); const v=clamp(d.s0*dd/d.d0,0.02,10); setVal(c,'scale',v); S.dragLabel={x:p.x,y:p.y,t:Math.round(v*100)+' %'}; break; }
+    case 'rot':{ let r=d.r0+(Math.atan2(p.y-d.cy,p.x-d.cx)-d.a0)*180/Math.PI; if(e.shiftKey) r=Math.round(r/15)*15; else { const n=Math.round(r/90)*90; if(Math.abs(r-n)<4) r=n; }
+      setVal(c,'rotation',Math.round(r*10)/10); S.dragLabel={x:p.x,y:p.y,t:Math.round(r)+'°'}; break; }
+    case 'rot3d':{ let ry=d.v.ry+dxs*0.5, rx=d.v.rx-dys*0.5; if(Math.abs(ry)<3) ry=0; if(Math.abs(rx)<3) rx=0; setVal(c,'ry',clamp(ry,-180,180)); setVal(c,'rx',clamp(rx,-180,180)); S.dragLabel={x:p.x,y:p.y,t:`↔ ${Math.round(ry)}°  ↕ ${Math.round(rx)}°`}; break; }
+    case 'depth':{ const z=clamp(d.v.z-dys*0.004,-3,1.5); setVal(c,'z',z); S.dragLabel={x:p.x,y:p.y,t:z>0?'näher':z<0?'weiter weg':'normal'}; break; }
+    case 'cam':{ setVal(c,'orbitY',d.v.oy+dxs*0.35); setVal(c,'orbitX',clamp(d.v.ox+dys*0.35,-89,89)); S.dragLabel={x:p.x,y:p.y,t:'🎥 '+Math.round(kv(c,'orbitY',localT(c)))+'°'}; break; }
+    case 'campan':{ const r=cv.getBoundingClientRect(); setVal(c,'panX',d.v.px-dxs/r.width); setVal(c,'panY',d.v.py-dys/r.height); break; }
+  }
+  refreshKf(); requestRender();
+});
+function endDrag(){ const d=S.drag; if(!d) return; S.drag=null; S.guide=null; S.dragLabel=null; if(d.moved){ commit(); updateClipEl(d.c); if(d.mode==='cam'||d.mode==='campan'){ if(S.selected===d.c.id) renderProps(); } refreshKf(); } if(S.tool==='camera') stageEl.style.cursor='grab'; requestRender(); }
+stageEl.addEventListener('pointerup',endDrag); stageEl.addEventListener('pointercancel',endDrag);
 let wheelT;
-cv.addEventListener('wheel',e=>{ const c=selClip(); if(!c||c.type==='audio') return; e.preventDefault(); setVal(c,'scale',clamp(kv(c,'scale',localT(c))*(e.deltaY<0?1.05:1/1.05),0.05,10)); refreshKf(); requestRender(); clearTimeout(wheelT); wheelT=setTimeout(()=>{ commit(); updateClipEl(c); },350); },{passive:false});
+stageEl.addEventListener('wheel',e=>{ if(e.target.closest('#ptool')) return;
+  if(S.tool==='camera'){ e.preventDefault(); const cam=activeCamera(true); setVal(cam,'dist',clamp(kv(cam,'dist',localT(cam))*(e.deltaY<0?1/1.06:1.06),0.1,6)); refreshKf(); requestRender(); clearTimeout(wheelT); wheelT=setTimeout(()=>{ commit(); updateClipEl(cam); },350); return; }
+  const c=selClip(); if(!canTransform(c)) return; e.preventDefault();
+  if(S.tool==='depth' && canRot3d(c)){ if(!c.is3d&&c.type!=='model'){ c.is3d=true; renderProps(); } setVal(c,'z',clamp(kv(c,'z',localT(c))+(e.deltaY<0?0.05:-0.05),-3,1.5)); }
+  else setVal(c,'scale',clamp(kv(c,'scale',localT(c))*(e.deltaY<0?1.05:1/1.05),0.02,10));
+  refreshKf(); requestRender(); clearTimeout(wheelT); wheelT=setTimeout(()=>{ commit(); updateClipEl(c); },350); },{passive:false});
 cv.addEventListener('dblclick',()=>{ const c=selClip(); if(c&&c.type==='text'){ const t=$('#propText'); if(t){ t.focus(); t.select(); } } });
+
+/* selection box + handles on a screen-space overlay (handles may stick out of the video) */
+function drawSel(){
+  const ov=$('#ovl'); if(!ov) return; const st=stageEl.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  const W=Math.round(st.width*dpr), H=Math.round(st.height*dpr); if(ov.width!==W||ov.height!==H){ ov.width=W; ov.height=H; }
+  const g=ov.getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W,H);
+  const sc=selClip(), b=sc&&boxes.get(sc.id); if(!b||S.exporting) return;
+  const r=cv.getBoundingClientRect(), k=r.width/cv.width, ox=r.left-st.left, oy=r.top-st.top;
+  g.setTransform(dpr,0,0,dpr,0,0); g.translate(ox+b.cx*k,oy+b.cy*k); g.rotate(b.rot);
+  const w=b.w*k, h=b.h*k; g.strokeStyle=S.tool==='move'?'#ffffff':'#22e3d3'; g.lineWidth=1.6; g.shadowColor='rgba(0,0,0,.6)'; g.shadowBlur=3; g.strokeRect(-w/2,-h/2,w,h);
+  if(canTransform(sc) && S.tool==='move'){
+    g.beginPath(); g.moveTo(0,-h/2); g.lineTo(0,-h/2-30); g.stroke();
+    const dot=(x,y,rad)=>{ g.beginPath(); g.arc(x,y,rad,0,Math.PI*2); g.fillStyle='#fff'; g.fill(); g.lineWidth=1.6; g.strokeStyle='#22e3d3'; g.stroke(); };
+    for(const [x,y] of [[-1,-1],[1,-1],[-1,1],[1,1]]) dot(x*w/2,y*h/2,6);
+    dot(0,-h/2-30,8); g.strokeStyle='#22e3d3'; g.lineWidth=1.8; g.beginPath(); g.arc(0,-h/2-30,4,-Math.PI*0.9,Math.PI*0.5); g.stroke();
+  }
+  g.setTransform(dpr,0,0,dpr,0,0);
+  if(S.dragLabel){ const L=S.dragLabel; const lx=ox+L.x*k+16, ly=oy+L.y*k+22; g.font='600 13px system-ui,sans-serif'; const tw=g.measureText(L.t).width; g.shadowBlur=0;
+    g.fillStyle='rgba(0,0,0,.78)'; rr2(g,lx-6,ly-14,tw+12,22,6); g.fill(); g.fillStyle='#fff'; g.textBaseline='middle'; g.fillText(L.t,lx,ly-3); }
+}
+function rr2(g,x,y,w,h,r){ g.beginPath(); if(g.roundRect) g.roundRect(x,y,w,h,r); else g.rect(x,y,w,h); }
+window.addEventListener('resize',()=>requestRender());
+/* floating toolbar above the preview */
+function updatePtool(){
+  const bar=$('#ptool'); if(!bar) return; bar.innerHTML='';
+  const c=selClip(), has3d=S.clips.some(x=>x.type==='model'||x.is3d||x.type==='camera');
+  const tb=(id,icon,label,title,on,dis)=>{ const b=el('button','pt'+(on?' on':'')); b.innerHTML=ic(icon)+`<span>${label}</span>`; b.title=title; if(dis){ b.disabled=true; } b.onclick=()=>setTool(id); bar.append(b); };
+  tb('move','hand','Bewegen','Verschieben, Größe ändern und drehen (Ecken + runder Griff)',S.tool==='move');
+  tb('rot3d','rot3d','3D drehen','Den Clip im Raum kippen und drehen – macht ihn automatisch zur 3D-Ebene',S.tool==='rot3d',c&&!canRot3d(c));
+  tb('depth','depth','Tiefe','Den Clip nach vorne oder hinten schieben',S.tool==='depth',c&&!canRot3d(c));
+  tb('camera','camera','Kamera','3D-Kamera mit der Maus bewegen (wird bei Bedarf automatisch angelegt)',S.tool==='camera');
+  if(c && canTransform(c)){
+    bar.append(el('span','psep'));
+    const k=el('button','pt'); k.innerHTML=ic('diamond')+'<span>Keyframe</span>'; k.title='Keyframe an dieser Stelle setzen (K)'; k.onclick=()=>$('#bKf').click(); bar.append(k);
+    const r=el('button','pt'); r.innerHTML=ic('undo')+'<span>Zurücksetzen</span>'; r.title='Position, Größe, Drehung und 3D zurücksetzen';
+    r.onclick=()=>{ Object.assign(c,{x:0,y:0,scale:1,rotation:0,rx:0,ry:0,z:0}); if(c.kf) for(const kk of ['x','y','scale','rotation','rx','ry','z']) delete c.kf[kk]; commit(); updateClipEl(c); renderProps(); requestRender(); }; bar.append(r);
+  }
+  bar.classList.toggle('hidden',!S.clips.length);
+  $('#ptip').classList.toggle('hidden',!S.clips.length);
+  void has3d;
+}
+
+/* ---------- Hilfe ---------- */
+const HELP=[
+ ['Erste Schritte','start anfang los anfangen grundlagen','<ol><li>Links bei <b>Medien</b> auf „Medien importieren“ klicken oder Dateien ins Fenster ziehen.</li><li>Auf das <b>+</b> eines Mediums klicken – es landet auf der Timeline unten.</li><li>Clip anklicken: rechts erscheinen alle Einstellungen, im Vorschaubild kannst du ihn direkt bewegen.</li><li>Oben rechts auf <b>Exportieren</b> klicken, wenn du fertig bist.</li></ol>'],
+ ['Medien importieren','video bild musik foto datei hochladen öffnen laden mp4 mp3 png jpg','Links im Tab <b>Medien</b> auf „Medien importieren“ klicken oder Dateien einfach ins Programm ziehen. Unterstützt werden Videos (MP4, MOV, WebM), Bilder (PNG, JPG, GIF, WebP), Musik (MP3, WAV, M4A …) und 3D-Modelle (.glb). Ziehst du Dateien direkt auf die Timeline, landen sie gleich an der richtigen Stelle.'],
+ ['Clips auf die Timeline legen','hinzufügen timeline spur einfügen anordnen reihenfolge','Klick auf das <b>+</b> eines Mediums hängt es hinten an die Hauptspur an. Du kannst Medien auch auf eine bestimmte Stelle der Timeline <b>ziehen</b>. Clips weiter oben liegen im Bild <b>vor</b> den Clips darunter. Mit „+ Videospur“ und „+ Audiospur“ bekommst du mehr Spuren.'],
+ ['Verschieben, Größe ändern, Drehen','größe skalieren drehen rotieren verschieben position vorschau griff ecke mausrad','Clip im <b>Vorschaubild</b> anklicken:<ul><li><b>Ziehen</b> = verschieben (rastet in der Mitte ein)</li><li><b>Ecken ziehen</b> = Größe ändern</li><li><b>Runden Griff oben</b> ziehen = drehen (rastet bei 0°/90° ein, mit Umschalt in 15°-Schritten)</li><li><b>Mausrad</b> = Größe</li></ul>Oben über dem Bild muss dafür „Bewegen“ aktiv sein.'],
+ ['Schneiden / Teilen','schneiden teilen split zerschneiden schere trennen cut','Abspielposition (türkise Linie) an die gewünschte Stelle setzen und <b>S</b> drücken oder auf die Schere klicken. Ist ein Clip ausgewählt, wird genau dieser geteilt.'],
+ ['Clips kürzen','kürzen trimmen länge anfang ende abschneiden','Clip auswählen und an seinem <b>linken oder rechten Rand</b> ziehen. Mit dem Magnet-Knopf rasten die Ränder an anderen Clips, Markern und der Abspielposition ein.'],
+ ['Löschen, Kopieren, Rückgängig','löschen entfernen kopieren einfügen duplizieren rückgängig wiederholen undo','<b>Entf</b> löscht den Clip, <b>Umschalt+Entf</b> löscht ihn und schließt die Lücke. <b>Strg+D</b> dupliziert, <b>Strg+C / Strg+V</b> kopiert und fügt an der Abspielposition ein. <b>Strg+Z</b> macht rückgängig, <b>Strg+Y</b> wiederholt.'],
+ ['Text hinzufügen','text schrift titel untertitel schreiben font','Links im Tab <b>Text</b> eine Vorlage anklicken. Rechts kannst du Text, Schriftart, Größe, Farbe, Kontur, Hintergrund und Schatten ändern. Doppelklick auf den Text im Vorschaubild springt direkt ins Textfeld. Unter „Text-Effekt“ gibt es Welle, Hüpfen, Regenbogen und mehr.'],
+ ['Sticker & Emojis','sticker emoji smiley','Im Tab <b>Sticker</b> ein Emoji anklicken. Es ist ein Text-Clip – du kannst es also bewegen, vergrößern, drehen und animieren.'],
+ ['Filter & Farben anpassen','filter farbe helligkeit kontrast sättigung look vintage schwarzweiss warm kalt','Clip auswählen, dann links im Tab <b>Effekte</b> einen Filter anklicken. Feineinstellungen (Helligkeit, Kontrast, Sättigung, Tönung, Vignette …) findest du rechts unter <b>Anpassen</b>.'],
+ ['Animationen','animation einblenden ausblenden rein raus pop zoom wischen bewegung','Rechts unter <b>Animation</b> wählst du, wie ein Clip erscheint (Eingang) und verschwindet (Ausgang), z. B. Blende, Zoom, Pop oder Wischen. „Dauerschleife“ lässt ihn die ganze Zeit wackeln, pulsieren oder schweben.'],
+ ['Übergänge zwischen Clips','übergang transition überblendung wechsel','Den <b>ersten</b> der beiden Clips auswählen, dann links im Tab <b>Effekte</b> unter „Übergang zum nächsten Clip“ z. B. Blende, Zoom oder Wischen anklicken. Die Clips müssen direkt hintereinander auf derselben Spur liegen.'],
+ ['Keyframes (Bewegung über Zeit)','keyframe animieren bewegung pfad raute diamant','<ol><li>Abspielposition an den Start setzen, Clip auswählen, <b>K</b> drücken (oder ◆ oben über dem Bild).</li><li>Abspielposition weiterschieben.</li><li>Clip im Bild verschieben, vergrößern oder drehen – der neue Keyframe wird automatisch gesetzt.</li></ol>Gelbe Rauten auf dem Clip zeigen die Keyframes, ein Klick springt hin. Im <b>Profi-Modus</b> gibt es Keyframes für jeden einzelnen Wert und Kurven wie „Überschwingen“ oder „Abprallen“.'],
+ ['Geschwindigkeit','tempo schneller langsamer zeitlupe zeitraffer speed kurve montage','Video- oder Audio-Clip auswählen, rechts unter <b>Geschwindigkeit</b> 0,5x–3x wählen oder den Regler nutzen. <b>Geschwindigkeitskurven</b> (Montage, Held, Bullet-Time …) machen Tempowechsel innerhalb eines Clips.'],
+ ['Rückwärts & Standbild','rückwärts reverse umgekehrt standbild freeze anhalten einfrieren','Video-Clip auswählen → rechts unter Geschwindigkeit „<b>Rückwärts abspielen</b>“ (für Clips bis 30 Sekunden). „<b>Standbild</b>“ (Taste F) hält das aktuelle Bild 3 Sekunden lang fest.'],
+ ['Lautstärke & Ton','lautstärke ton audio leiser lauter stumm fade normalisieren','Clip auswählen → rechts unter <b>Audio</b>: Lautstärke, Ein-/Ausblenden, Stumm. „Normalisieren“ stellt die Lautstärke automatisch passend ein. „Audio trennen“ legt den Ton eines Videos auf eine eigene Spur.'],
+ ['Stimm-Effekte & Equalizer','stimme effekt echo hall roboter telefon radio bass equalizer rauschen','Im <b>Profi-Modus</b> unter „Audio-Effekte & Equalizer“: Echo, Hall, Telefon, Radio, Megafon, Unterwasser, Roboter, dazu Bässe/Mitten/Höhen, Links/Rechts-Balance und „Rauschen reduzieren“.'],
+ ['Beats erkennen','beat takt musik rhythmus schnitt synchron','Musik-Clip auswählen → im Profi-Modus unter „Audio-Effekte“ auf <b>Beats anzeigen</b> klicken. Weiße Striche zeigen die Beats, und Clips rasten beim Verschieben daran ein – perfekt für Schnitte im Takt.'],
+ ['Voiceover, Webcam, Bildschirm','aufnahme aufnehmen mikrofon voiceover webcam kamera bildschirm screen','Tab <b>Aufnahme</b>: Voiceover (das Video läuft dabei mit), Webcam oder Bildschirmaufnahme. Die Aufnahme landet automatisch auf der Timeline.'],
+ ['Green Screen','green screen greenscreen hintergrund entfernen freistellen chroma key blau','Video auswählen → rechts unter <b>Freistellen (Green Screen)</b> auf „Grün“ oder „Blau“ klicken oder mit der Pipette ins Bild klicken. Mit Toleranz und weicher Kante nachbessern. Der Clip muss auf einer Spur über dem neuen Hintergrund liegen.'],
+ ['Zuschneiden & Masken','zuschneiden crop maske kreis herz stern ecken rahmen schatten','Im <b>Profi-Modus</b> unter „Zuschneiden, Maske & Rahmen“: Ränder abschneiden, Masken (Kreis, Rechteck, Herz, Stern, Linear, Split), runde Ecken, Rahmen und Schatten.'],
+ ['Bild-in-Bild & Split-Screen','bild in bild pip split screen zwei videos nebeneinander layout','Clip auswählen → rechts bei <b>Layout</b> z. B. „Links“, „Rechts“ oder „Bild-in-Bild ↗“ anklicken. Für Split-Screen das zweite Video auf eine andere Spur legen und „Rechts“ wählen.'],
+ ['Formen, Hintergründe, Fortschrittsbalken','form rechteck kreis pfeil hintergrund farbe verlauf fortschritt balken visualizer','Tab <b>Elemente</b>: Formen, Farbflächen und Verläufe, Fortschrittsbalken sowie Audio-Visualizer, der live auf deine Musik reagiert.'],
+ ['Effekt-Ebenen','effekt glitch vhs pixel wackeln kaleidoskop alter film ebene','Tab <b>Effekte</b> → „Video-Effekte“: Ein Effekt-Clip wirkt auf <b>alles darunter</b>, solange er läuft. Länge auf der Timeline ziehen, Stärke rechts einstellen.'],
+ ['Vorlagen','vorlage template intro outro abspann countdown bauchbinde abonnieren','Tab <b>Vorlagen</b>: fertige Intros, Bauchbinden, Countdown, Abspann, Abonnieren-Button u. v. m. Danach einfach die Texte anklicken und ändern.'],
+ ['Untertitel importieren','untertitel srt vtt subtitles','Tab <b>Vorlagen</b> → „Untertitel importieren“ und eine .srt- oder .vtt-Datei wählen. Jede Zeile wird ein eigener Text-Clip auf einer Untertitel-Spur.'],
+ ['3D: Clips im Raum drehen','3d ebene drehen kippen raum perspektive tiefe','Oben über dem Bild „<b>3D drehen</b>“ wählen und auf einem Clip ziehen: links/rechts dreht, hoch/runter kippt. Mit „<b>Tiefe</b>“ ziehst du ihn nach vorne oder hinten. Der Clip wird dabei automatisch zur 3D-Ebene. Tipp: Mit gedrückter <b>Alt</b>-Taste geht 3D-Drehen auch im Bewegen-Modus.'],
+ ['3D-Objekte & Modelle','3d objekt würfel kugel modell glb licht material','Tab <b>3D</b>: Würfel, Kugel, Torus & Co. anklicken oder ein eigenes .glb-Modell importieren. Farbe, Metall, Rauheit und Auto-Drehung rechts einstellen. Das Licht stellst du ohne Auswahl rechts unter „Projekt → 3D-Licht“ ein.'],
+ ['3D-Kamera','kamera 3d orbit fahrt zoom schwenk vertigo','Oben über dem Bild „<b>Kamera</b>“ wählen und im Bild ziehen – die Kamera fliegt um deine 3D-Sachen. Mausrad zoomt, Umschalt+Ziehen verschiebt. Fertige Kamerafahrten (Orbit, Ranfahren, Vorbeiflug …) findest du rechts, wenn der Kamera-Clip ausgewählt ist. Normale 2D-Clips bleiben fest im Bild.'],
+ ['Partikel','partikel funken schnee konfetti feuer rauch regen explosion','Tab <b>3D</b> → Partikel anklicken. Die Quelle verschiebst du im Vorschaubild, Menge, Größe, Tempo, Schwerkraft und Farbe rechts.'],
+ ['Parent, Wiggle, Auto-Ausrichten','parent eltern folgen wiggle zittern ausrichten pfad motion after effects','Im <b>Profi-Modus</b> unter „Motion“: Mit <b>Parent</b> folgt ein Clip einem anderen. <b>Wiggle</b> erzeugt zufällige Bewegung. <b>Auto-Ausrichten</b> dreht den Clip in Bewegungsrichtung. Die Keyframe-Schleife wiederholt Animationen.'],
+ ['Format ändern (TikTok, YouTube …)','format seitenverhältnis 9:16 16:9 tiktok reels youtube hochformat querformat hintergrund','Unter dem Vorschaubild links das Format wählen, z. B. <b>9:16</b> für TikTok/Reels. Klickst du ins Leere, kannst du rechts als Hintergrund „Unscharfes Video“ einstellen – wie bei CapCut.'],
+ ['Exportieren','export speichern video mp4 rendern fertig herunterladen png audio','Oben rechts auf <b>Exportieren</b>: Format, Auflösung, Bildrate und Qualität wählen. Der Export läuft in Echtzeit – bleib dabei im Fenster. Du kannst auch nur den Ton oder das aktuelle Bild als PNG speichern.'],
+ ['Speichern & neues Projekt','speichern sichern projekt neu verloren wiederherstellen','Dein Projekt wird <b>automatisch gespeichert</b>. Beim nächsten Start wirst du gefragt, ob du es wiederherstellen willst. „Neues Projekt“ oben startet leer.'],
+ ['Einfach- und Profi-Modus','einfach profi modus kompliziert mehr einstellungen','Oben rechts kannst du zwischen <b>Einfach</b> und <b>Profi</b> umschalten. Im einfachen Modus siehst du nur die wichtigsten Einstellungen, im Profi-Modus alles (Keyframes pro Wert, Masken, Equalizer, Motion …).'],
+ ['Tastenkürzel','tastatur shortcut kürzel tasten','<b>Leertaste</b> Play/Pause · <b>S</b> Teilen · <b>Entf</b> Löschen · <b>Strg+Z/Y</b> Rückgängig/Wiederholen · <b>Strg+D</b> Duplizieren · <b>Strg+C/V</b> Kopieren/Einfügen · <b>K</b> Keyframe · <b>M</b> Marker · <b>F</b> Standbild · <b>←/→</b> 1 Bild · <b>+/−</b> Timeline zoomen · <b>F1</b> Hilfe'],
+ ['Fehler melden','fehler bug problem absturz melden protokoll','Oben auf „<b>Fehler melden</b>“ klicken (oder im Launcher „Fehlerprotokoll kopieren“), dann in Discord mit Strg+V einfügen und kurz beschreiben, was du gemacht hast.']
+];
+const normTxt=s=>s.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/<[^>]+>/g,' ');
+function buildHelpPane(){
+  const p=$('#pane-help'); p.innerHTML='';
+  p.append(el('h4',null,'Hilfe'));
+  const q=el('input'); q.type='text'; q.id='helpQ'; q.placeholder='Wonach suchst du? z. B. „drehen“, „Green Screen“'; q.style.width='100%'; p.append(q);
+  const list=el('div','hlist'); p.append(list);
+  const show=()=>{ const words=normTxt(q.value).split(/\s+/).filter(Boolean); list.innerHTML=''; let n=0;
+    for(const [t,k,b] of HELP){ const hay=normTxt(t+' '+k+' '+b); if(words.length && !words.every(w=>hay.includes(w))) continue; n++;
+      const d=el('details','hitem'); const su=el('summary',null,t); const body=el('div','hbody'); body.innerHTML=b; d.append(su,body); if(words.length&&n===1) d.open=true; list.append(d); }
+    if(!n) list.append(el('p','note','Nichts gefunden – versuch ein anderes Wort.')); };
+  q.oninput=show; show();
+}
+function openHelp(){ switchTab('help'); setTimeout(()=>{ const q=$('#helpQ'); if(q){ q.focus(); q.select(); } },30); }
 
 /* ---------- Export ---------- */
 let EX=null, lastExport=null, downloadsApi=null;
@@ -2457,7 +2629,7 @@ $('#exSave').onclick=async()=>{
 document.addEventListener('visibilitychange',()=>{ if(document.hidden && EX) toast('Bitte bleib während des Exports in diesem Tab.'); });
 
 /* ---------- Toolbar / wiring ---------- */
-function renderAll(){ renderTimeline(); renderProps(); renderEffects(); updateUndo(); requestRender(); }
+function renderAll(){ renderTimeline(); renderProps(); renderEffects(); updateUndo(); updatePtool(); requestRender(); }
 function init(){
   $('#undoBtn').innerHTML=ic('undo'); $('#redoBtn').innerHTML=ic('redo');
   $('#exportBtn').innerHTML=ic('download')+'<span>Exportieren</span>';
@@ -2478,6 +2650,10 @@ function init(){
   $('#bFreeze').onclick=freezeFrame;
   $('#bKf').onclick=()=>{ const c=selClip(); toggleKfAll(c); if(c){ commit(); updateClipEl(c); refreshKf(); requestRender(); } };
   $('#newBtn').onclick=newProject;
+  $('#helpBtn').innerHTML=ic('help'); $('#helpBtn').onclick=openHelp;
+  const setMode=v=>{ S.simple=v; try{ localStorage.setItem('mc_simple',v?'1':'0'); }catch(e){} $('#mSimple').classList.toggle('on',v); $('#mPro').classList.toggle('on',!v); renderProps(); };
+  $('#mSimple').onclick=()=>setMode(true); $('#mPro').onclick=()=>setMode(false);
+  let sm=true; try{ sm=localStorage.getItem('mc_simple')!=='0'; }catch(e){} S.simple=sm; $('#mSimple').classList.toggle('on',sm); $('#mPro').classList.toggle('on',!sm);
   if(NATIVE){ const lb=$('#logBtn'); lb.classList.remove('hidden'); lb.onclick=async()=>{ await NATIVE.copyLog(); toast('Fehlerprotokoll kopiert – füge es in Discord ein (Strg+V)'); };
     NATIVE.info().then(i=>{ $('#verLbl').textContent='v'+i.version; }).catch(()=>{}); }
   $('#projName').addEventListener('input',scheduleSave);
@@ -2512,6 +2688,10 @@ function init(){
     else if(k==='End'){ e.preventDefault(); setTime(dur()); }
     else if(k==='+'||k==='='){ zoomTo(S.pps*1.3); }
     else if(k==='-'){ zoomTo(S.pps/1.3); }
+    else if(k==='F1'||k==='?'){ e.preventDefault(); openHelp(); }
+    else if(!mod && lk==='v'){ setTool('move'); }
+    else if(!mod && lk==='r'){ setTool('rot3d'); }
+    else if(!mod && lk==='c'){ setTool('camera'); }
     else if(!mod && lk==='m'){ e.preventDefault(); toggleMarker(); }
     else if(mod && lk==='c'){ e.preventDefault(); copySel(); }
     else if(mod && lk==='v'){ e.preventDefault(); pasteClip(); }
