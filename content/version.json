@@ -1,5 +1,5 @@
 {
-  "version": "1.1.3",
-  "notes": "🍉 Melonenclips 1.1.4\n\n✨ Neu\n• Neues Werkzeug „Größe“: Objekte direkt im Bild größer oder kleiner ziehen\n\n🛠 Verbessert\n• Eine Werkzeugleiste für alles: Bewegen, Drehen, Größe, Tiefe und Kamera gelten jetzt gleichzeitig in beiden Ansichten\n• Die 3D-Ansicht zeigt immer das passende Gizmo zum gewählten Werkzeug (Pfeile, Ringe oder Kreis)\n• G = Bewegen funktioniert jetzt überall\n\n🐞 Behoben\n• In der 3D-Ansicht war teilweise ein anderes Werkzeug aktiv als oben ausgewählt\n• Keyframes: Ein nachträglich eingefügter Keyframe in der Mitte startet die Bewegung jetzt erst ab dort",
+  "version": "1.1.4",
+  "notes": "• 3D-Objekte erscheinen jetzt gerade statt schräg gedreht\n• Werte kannst du jetzt direkt als Zahl eintippen: einfach auf die Zahl neben dem Regler klicken",
   "date": "2026-11-13"
 }
