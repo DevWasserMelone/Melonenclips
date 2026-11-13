@@ -1,5 +1,5 @@
 {
-  "version": "1.1.1",
-  "notes": "",
+  "version": "1.1.2",
+  "notes": "🍉 Melonenclips Update\n\n✨ Neu\n• 2. Ansicht wie in Blender: Objekte direkt im 3D-Raum mit Pfeilen bewegen (G), mit Ringen drehen (R) und skalieren (S)\n• In der 3D-Ansicht siehst du jetzt auch dein Video\n• Mehrere Clips auswählen: in der Timeline einen Rahmen ziehen, Strg/Umschalt + Klick oder Strg+A\n• Markierte Clips zusammen verschieben oder löschen\n• Rechte Seite aufgeräumt: Einstellungen in Tabs (Basis, Bild, Animation, Tempo, Audio)\n• Neue, übersichtlichere Werkzeugleiste über dem Vorschaubild\n\n🛠 Verbessert\n• Bessere Kamera-Steuerung: links ziehen = drehen, rechts ziehen = verschieben, Mausrad = zoomen\n• 3D drehen: Umschalt = fein, Strg = in 15°-Schritten\n• Neue Tasten: T = Tiefe, Esc = zurück zu Bewegen\n• Der Launcher erkennt neue Updates jetzt zuverlässiger und schneller\n• Neuinstallationen starten direkt mit der aktuellen Editor-Version\n\n🐞 Behoben\n• Keyframes: Änderungen in der Mitte eines Clips wirken nicht mehr schon ab dem Anfang\n• 3D-Objekte drehen sich nicht mehr von allein",
   "date": "2026-11-13"
 }
