@@ -256,6 +256,51 @@ ipcMain.handle('file:save', async (e, { name, data }) => {
   return { status: 'saved', path: r.filePath };
 });
 
+
+/* ---------- FFmpeg (mitgeliefert) ---------- */
+const { spawn } = require('child_process');
+const TMP_DIR = path.join(os.tmpdir(), 'melonenclips');
+function ffmpegPath() {
+  try {
+    let p = require('ffmpeg-static');
+    if (p && p.includes('app.asar')) p = p.replace('app.asar', 'app.asar.unpacked');
+    if (p && fs.existsSync(p)) return p;
+  } catch (e) { /* nicht installiert */ }
+  return null;
+}
+let ffVersion = null;
+const ffJobs = new Map();
+const tmpFiles = new Map();
+function cleanTmp() { try { fs.mkdirSync(TMP_DIR, { recursive: true }); for (const f of fs.readdirSync(TMP_DIR)) { const fp = path.join(TMP_DIR, f); try { if (Date.now() - fs.statSync(fp).mtimeMs > 24 * 3600e3) fs.unlinkSync(fp); } catch (e) {} } } catch (e) {} }
+ipcMain.handle('ff:available', async () => {
+  const p = ffmpegPath(); if (!p) return { ok: false };
+  if (!ffVersion) { ffVersion = await new Promise((res) => { try { const pr = spawn(p, ['-version']); let o = ''; pr.stdout.on('data', (d) => { o += d; }); pr.on('close', () => res((o.split('\n')[0] || 'ffmpeg').trim())); pr.on('error', () => res(null)); } catch (e) { res(null); } }); }
+  return { ok: !!ffVersion, version: ffVersion };
+});
+ipcMain.handle('ff:tmpPath', (_e, name) => { fs.mkdirSync(TMP_DIR, { recursive: true }); return path.join(TMP_DIR, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${String(name || 'datei').replace(/[^\w.\-]+/g, '_')}`); });
+ipcMain.handle('ff:tmpOpen', (_e, name) => { fs.mkdirSync(TMP_DIR, { recursive: true }); const fp = path.join(TMP_DIR, `${Date.now()}-${String(name || 'datei').replace(/[^\w.\-]+/g, '_')}`); const id = Math.random().toString(36).slice(2); tmpFiles.set(id, fs.openSync(fp, 'w')); tmpFiles.set(id + ':p', fp); return id; });
+ipcMain.handle('ff:tmpWrite', (_e, id, chunk) => { fs.writeSync(tmpFiles.get(id), Buffer.from(chunk)); return true; });
+ipcMain.handle('ff:tmpClose', (_e, id) => { fs.closeSync(tmpFiles.get(id)); const fp = tmpFiles.get(id + ':p'); tmpFiles.delete(id); tmpFiles.delete(id + ':p'); return fp; });
+ipcMain.handle('ff:read', (_e, fp) => { const b = fs.readFileSync(fp); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); });
+ipcMain.handle('ff:remove', (_e, fp) => { try { if (fp && fp.startsWith(TMP_DIR)) fs.unlinkSync(fp); } catch (e) {} return true; });
+ipcMain.handle('ff:copy', async (e, { from, name }) => {
+  const w = BrowserWindow.fromWebContents(e.sender);
+  const r = await dialog.showSaveDialog(w, { defaultPath: path.join(app.getPath('videos'), name) });
+  if (r.canceled || !r.filePath) return { status: 'declined' };
+  fs.copyFileSync(from, r.filePath); return { status: 'saved', path: r.filePath };
+});
+ipcMain.handle('ff:run', (e, { args, job }) => new Promise((resolve) => {
+  const p = ffmpegPath(); if (!p) { resolve({ code: -1, err: 'FFmpeg fehlt' }); return; }
+  if (!Array.isArray(args) || !args.every((a) => typeof a === 'string')) { resolve({ code: -1, err: 'Ungültige Argumente' }); return; }
+  log('FFmpeg', args.filter((a) => !a.startsWith(TMP_DIR)).slice(0, 12).join(' '));
+  const pr = spawn(p, ['-hide_banner', '-nostdin', ...args], { windowsHide: true });
+  ffJobs.set(job, pr); let err = '';
+  pr.stderr.on('data', (d) => { const t = String(d); err += t; if (err.length > 400000) err = err.slice(-300000); if (!e.sender.isDestroyed()) e.sender.send('ff', { job, text: t }); });
+  pr.on('error', (x) => { ffJobs.delete(job); log('FFmpeg-Fehler', x.message); resolve({ code: -1, err: x.message }); });
+  pr.on('close', (code) => { ffJobs.delete(job); if (code) log('FFmpeg beendet mit', code, err.slice(-500)); resolve({ code, err }); });
+}));
+ipcMain.handle('ff:cancel', (_e, job) => { const pr = ffJobs.get(job); if (pr) { try { pr.kill(); } catch (e) {} } return true; });
+
 app.on('second-instance', () => { const w = editor || launcher; if (w) { if (w.isMinimized()) w.restore(); w.focus(); } });
-app.whenReady().then(() => { log('Start', `Programm ${app.getVersion()}, Editor ${localVer()}`); setupPermissions(); createLauncher(); });
+app.whenReady().then(() => { log('Start', `Programm ${app.getVersion()}, Editor ${localVer()}`, ffmpegPath() ? '(FFmpeg ok)' : '(ohne FFmpeg)'); cleanTmp(); setupPermissions(); createLauncher(); });
 app.on('window-all-closed', () => app.quit());

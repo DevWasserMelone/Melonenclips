@@ -1,7 +1,7 @@
 {
   "name": "melonenclips",
   "productName": "Melonenclips",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Melonenclips – Video-Editor mit 3D, Effekten und Launcher",
   "main": "electron/main.js",
   "author": "Melonenclips",
@@ -13,7 +13,8 @@
     "release": "electron-builder --win --publish always"
   },
   "dependencies": {
-    "electron-updater": "^6.3.9"
+    "electron-updater": "^6.3.9",
+    "ffmpeg-static": "^5.2.0"
   },
   "devDependencies": {
     "electron": "^33.2.1",
@@ -58,6 +59,9 @@
         "provider": "github",
         "releaseType": "release"
       }
+    ],
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**/*"
     ]
   }
 }
