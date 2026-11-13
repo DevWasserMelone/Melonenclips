@@ -380,7 +380,7 @@ input[type=color]{width:38px;height:26px;border:1px solid var(--line);border-rad
 </div>
 
 <div class="modal hidden" id="busyModal">
-  <div class="mbox"><h3 id="busyText">Bitte warten …</h3><div class="progress"><div class="bar" id="busyBar"></div></div><p class="note">Bitte bleib in diesem Tab.</p></div>
+  <div class="mbox"><h3 id="busyText">Bitte warten …</h3><div class="progress"><div class="bar" id="busyBar"></div></div><p class="note">Bitte bleib in diesem Tab.</p><div class="mact"><button class="btn hidden" id="busyCancel">Abbrechen</button></div></div>
 </div>
 
 <div class="modal hidden" id="confirmModal">
@@ -450,6 +450,7 @@ const IC = {
  cube:'<path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/>',
  shapes:'<rect x="3" y="3" width="8" height="8" rx="1"/><circle cx="17" cy="17" r="4"/><path d="M17 3l4 7h-8z"/>',
  layout:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
+ pin:'<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
  pick:'<path d="m2 22 1-1h3l9-9M3 21v-3l9-9M15 6l3-3 3 3-3 3M12 9l3 3"/>'
 };
 const ic = n => `<svg viewBox="0 0 24 24" class="i">${IC[n]}</svg>`;
@@ -962,7 +963,7 @@ function mediaSource(c){
 function visibleClipsAt(t){
   const out=[], D=dur(), atEnd=Math.abs(t-D)<1e-6;
   for(let i=S.tracks.length-1;i>=0;i--){ const tr=S.tracks[i]; if(tr.kind!=='visual'||tr.hidden) continue;
-    for(const c of S.clips){ if(c.trackId!==tr.id || c.type==='audio') continue; const e=c.start+c.duration;
+    for(const c of S.clips){ if(c.trackId!==tr.id || c.type==='audio' || c._trkHide) continue; const e=c.start+c.duration;
       if(t>=c.start && (t<e || (atEnd && Math.abs(e-t)<1e-6))) out.push(c); } }
   return out;
 }
@@ -1274,6 +1275,7 @@ function drawOverlay(W,H){
     ctx.fillStyle='#ffd400'; for(const kt of kfTimes(sc)){ const P=xf(sc,kt); ctx.save(); ctx.translate(W/2+P.x*W,H/2+P.y*H); ctx.rotate(Math.PI/4); ctx.fillRect(-lw*3,-lw*3,lw*6,lw*6); ctx.restore(); }
     ctx.restore();
   }
+  drawTrackPath(ctx,W,H);
   { const cam=cameraAt(S.t,W,H); drawLightGuides(ctx,W,H,S.t,cam,p=>{ const b=projBox(cam,W,H,p); return b?[b.x,b.y]:null; },W/960); }
   drawSel();
 }
@@ -1876,6 +1878,7 @@ function xf(c,lt,depth=0){
   let x=kv(c,'x',lt), y=kv(c,'y',lt), rot=kv(c,'rotation',lt), sc=kv(c,'scale',lt); const W=cv.width,H=cv.height;
   if((c.wigA||0)>0||(c.wigR||0)>0){ const T=lt*(c.wigF||2), sd=hashStr(c.id), a=(c.wigA||0)/100*Math.min(W,H); x+=vnoise(T,sd)*a/W; y+=vnoise(T,sd+5)*a/H; rot+=vnoise(T,sd+9)*(c.wigR||0); }
   if(c.autoOrient && (hasKf(c,'x')||hasKf(c,'y'))){ const e=0.02, dx=(kv(c,'x',lt+e)-kv(c,'x',lt-e))*W, dy=(kv(c,'y',lt+e)-kv(c,'y',lt-e))*H; if(Math.abs(dx)+Math.abs(dy)>1e-3) rot+=Math.atan2(dy,dx)*180/Math.PI; }
+  if(c.trk && c.trk.pts && c.trk.pts.length){ const a=trkPos(c.trk,c.start+lt), b=trkPos(c.trk,c.trk.t0); if(a&&b){ x+=a.x-b.x; y+=a.y-b.y; } }
   if(c.parent && depth<8){ const p=clipById(c.parent); if(p && p.id!==c.id){ const P=xf(p,lt+c.start-p.start,depth+1), r=P.rot*Math.PI/180, px=x*W*P.sc, py=y*H*P.sc;
       x=P.x+(px*Math.cos(r)-py*Math.sin(r))/W; y=P.y+(px*Math.sin(r)+py*Math.cos(r))/H; rot+=P.rot; sc*=P.sc; } }
   return {x,y,rot,sc};
@@ -2579,6 +2582,99 @@ function cropSection(p,c){
   slider(b,'Rahmen',c,'borderW',0,30,0.5); colorRow(b,'Rahmenfarbe',c,'borderC');
   slider(b,'Schatten',c,'dshadow',0,80,1);
 }
+/* ---------- Tracking: Clips an einem Punkt im Video festmachen ---------- */
+let trkC=null;
+function trkPos(trk,t){ const P=trk&&trk.pts; if(!P||!P.length) return null; if(t<=P[0].t) return P[0]; const L=P[P.length-1]; if(t>=L.t) return L;
+  let lo=0,hi=P.length-1; while(hi-lo>1){ const m=(lo+hi)>>1; if(P[m].t<=t) lo=m; else hi=m; } const a=P[lo],b=P[hi],f=(t-a.t)/((b.t-a.t)||1); return {t,x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f}; }
+function trkSmooth(trk){ const R=trk.raw||[], k=Math.round(clamp(trk.smooth??0.3,0,1)*6); if(!k){ trk.pts=R.map(p=>({...p})); return; }
+  trk.pts=R.map((p,i)=>{ let sx=0,sy=0,n=0; for(let j=Math.max(0,i-k);j<=Math.min(R.length-1,i+k);j++){ const w=1+k-Math.abs(i-j); sx+=R[j].x*w; sy+=R[j].y*w; n+=w; } return {t:p.t,x:sx/n,y:sy/n}; }); }
+function trkGrab(){ const W=cv.width,H=cv.height, w=480, h=Math.round(480*H/W); trkC=offc(trkC,w,h); const g=trkC.g; g.setTransform(1,0,0,1,0,0); g.filter='none'; g.globalAlpha=1; g.drawImage(cv,0,0,w,h);
+  const d=g.getImageData(0,0,w,h).data, n=w*h, C=[new Float32Array(n),new Float32Array(n),new Float32Array(n)]; for(let i=0,j=0;i<n;i++,j+=4){ C[0][i]=d[j]; C[1][i]=d[j+1]; C[2][i]=d[j+2]; } return {C,w,h}; }
+/* Vorlage mit Gewichtung zur Mitte hin (Hintergrund am Rand stört weniger), in Farbe */
+function trkPatch(F,cx,cy,R){ const N=(2*R+1)*(2*R+1), sg=R*0.6, W=new Float32Array(N); let k=0,ws=0; cx=Math.round(cx); cy=Math.round(cy);
+  for(let dy=-R;dy<=R;dy++) for(let dx=-R;dx<=R;dx++){ W[k]=Math.exp(-(dx*dx+dy*dy)/(2*sg*sg)); ws+=W[k++]; } for(let i=0;i<N;i++) W[i]/=ws;
+  const TW=[], raw=[]; let norm=0;
+  for(let ch=0;ch<3;ch++){ const v=new Float32Array(N); k=0; let m=0; for(let dy=-R;dy<=R;dy++) for(let dx=-R;dx<=R;dx++){ const x=clamp(cx+dx,0,F.w-1), y=clamp(cy+dy,0,F.h-1); v[k]=F.C[ch][y*F.w+x]; m+=W[k]*v[k]; k++; }
+    const tw=new Float32Array(N); for(let i=0;i<N;i++){ const t=v[i]-m; tw[i]=W[i]*t; norm+=W[i]*t*t; } TW.push(tw); raw.push(v); }
+  return {W,TW,raw,norm:Math.sqrt(norm)||1,R}; }
+function trkBlend(T,F,cx,cy,a){ const C=trkPatch(F,cx,cy,T.R), raw=T.raw.map((v,ch)=>v.map((x,i)=>x*(1-a)+C.raw[ch][i]*a));
+  const N=T.W.length, TW=[]; let norm=0; for(let ch=0;ch<3;ch++){ let m=0; for(let i=0;i<N;i++) m+=T.W[i]*raw[ch][i]; const tw=new Float32Array(N); for(let i=0;i<N;i++){ const t=raw[ch][i]-m; tw[i]=T.W[i]*t; norm+=T.W[i]*t*t; } TW.push(tw); }
+  return {W:T.W,TW,raw,norm:Math.sqrt(norm)||1,R:T.R}; }
+function trkScore(F,T,cx,cy){ const R=T.R, w=F.w; if(cx-R<0||cy-R<0||cx+R>=F.w||cy+R>=F.h) return -2; let num=0,vf=0;
+  for(let ch=0;ch<3;ch++){ const G=F.C[ch], TW=T.TW[ch]; let s=0,sf=0,sff=0,k=0;
+    for(let dy=-R;dy<=R;dy++){ const o=(cy+dy)*w+cx; for(let dx=-R;dx<=R;dx++){ const f=G[o+dx], ww=T.W[k]; s+=f*TW[k]; sf+=ww*f; sff+=ww*f*f; k++; } }
+    num+=s; vf+=sff-sf*sf; }
+  return vf<=1e-3?0:num/(Math.sqrt(vf)*T.norm); }
+function trkFind(F,T,px,py,SR){ let best=-3,bx=Math.round(px),by=Math.round(py); const cx0=bx, cy0=by;
+  let bestP=-9; for(let dy=-SR;dy<=SR;dy+=2) for(let dx=-SR;dx<=SR;dx+=2){ const s=trkScore(F,T,cx0+dx,cy0+dy), sp=s-0.0025*Math.hypot(dx,dy); if(sp>bestP){ bestP=sp; best=s; bx=cx0+dx; by=cy0+dy; } }
+  const cx1=bx, cy1=by; for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++){ const s=trkScore(F,T,cx1+dx,cy1+dy); if(s>best){ best=s; bx=cx1+dx; by=cy1+dy; } }
+  /* Subpixel */ const sub=(a,b,c)=>{ const d=a-2*b+c; return Math.abs(d)<1e-6?0:clamp(0.5*(a-c)/d,-0.5,0.5); };
+  const sx=sub(trkScore(F,T,bx-1,by),best,trkScore(F,T,bx+1,by)), sy=sub(trkScore(F,T,bx,by-1),best,trkScore(F,T,bx,by+1));
+  return {x:bx+sx,y:by+sy,s:best}; }
+function beginTrackPick(c){ if(!c) return; pause(); S.pickTrack=c.id; cv.classList.add('picking'); S.pick=null;
+  toast('📌 Klicke im Vorschaubild auf den Punkt, dem „'+(TYPE_LABEL[c.type]||'Clip')+'“ folgen soll – z. B. ein Gesicht oder eine Hand. (Esc = abbrechen)'); }
+async function startTrack(c,p){
+  const W=cv.width,H=cv.height, sc=480/W, t0=S.t, fps=20, dt=1/fps;
+  const T0=Math.max(0,c.start), T1=Math.min(dur(),c.start+c.duration);
+  if(t0<T0-1e-6||t0>T1+1e-6){ toast('Die Abspielposition muss im Clip liegen'); return; }
+  let cancel=false; showBusy('📌 Verfolge den Punkt …'); const cb=$('#busyCancel'); cb.classList.remove('hidden'); cb.onclick=()=>{ cancel=true; };
+  c._trkHide=true; const wasExp=S.exporting; S.exporting=true;
+  const grab=async t=>{ S.t=t; syncMedia(t,false); await waitSeeks();
+    /* jedes Video exakt auf das richtige Bild stellen und warten, bis es wirklich da ist */
+    const ps=[]; for(const v of S.clips){ if(!isAV(v)||v.type!=='video') continue; const lt=t-v.start; if(lt<0||lt>=v.duration) continue; const r=getEl(v); if(!r) continue; const e=r.el, target=v.in+srcAt(v,lt);
+      if(Math.abs(e.currentTime-target)>0.004){ ps.push(new Promise(res=>{ const done=()=>{ if(e.requestVideoFrameCallback) e.requestVideoFrameCallback(()=>res()); else res(); }; e.addEventListener('seeked',done,{once:true}); setTimeout(res,2000); })); e.currentTime=target; } }
+    await Promise.all(ps); await new Promise(r=>setTimeout(r,15)); render(t); return trkGrab(); };
+  const R=14, SR=34, raw=[]; let lost=null, done=0; const total=Math.max(1,Math.round((T1-T0)/dt));
+  try{
+    const F0=await grab(t0); const startP={x:p.x*sc,y:p.y*sc}; const T00=trkPatch(F0,startP.x,startP.y,R);
+    raw.push({t:t0,x:p.x/W,y:p.y/H});
+    for(const dir of [1,-1]){
+      let T=T00, last=startP, prev=startP, miss=0;
+      for(let t=t0+dir*dt; dir>0?t<=T1+1e-6:t>=T0-1e-6; t+=dir*dt){
+        if(cancel) break;
+        const F=await grab(Math.min(T1-1e-4,Math.max(T0,t)));
+        const pred={x:last.x+(last.x-prev.x)*0.8,y:last.y+(last.y-prev.y)*0.8};
+        let m=trkFind(F,T,pred.x,pred.y,SR); const m2=trkFind(F,T00,pred.x,pred.y,SR); if(m2.s>m.s-0.03) m=m2;
+        if(m.s<0.35){ if(++miss>8){ lost=t; break; } m={x:pred.x,y:pred.y,s:m.s}; } else miss=0;
+        prev=last; last={x:m.x,y:m.y}; raw.push({t,x:m.x/sc/W,y:m.y/sc/H});
+        if(m.s>0.75) T=trkBlend(T,F,m.x,m.y,0.2);
+        done++; busyProgress(done/total); $('#busyText').textContent='📌 Verfolge den Punkt … '+Math.round(done/total*100)+' %';
+      }
+      if(cancel) break;
+    }
+  }catch(e){ console.warn(e); }
+  finally{ delete c._trkHide; S.exporting=wasExp; cb.classList.add('hidden'); hideBusy(); }
+  if(cancel){ S.t=t0; syncMedia(t0,false); requestRender(); toast('Tracking abgebrochen'); return; }
+  raw.sort((a,b)=>a.t-b.t);
+  c.trk={raw,t0,smooth:0.3,px:p.x/W,py:p.y/H}; trkSmooth(c.trk);
+  S.t=t0; syncMedia(t0,false); commit(); renderProps(); updateClipEl(c); updatePtool(); requestRender();
+  toast(lost!=null?`📌 Angeheftet – bei ${fmtTime(lost)} ging der Punkt verloren (verdeckt oder zu schnell). Davor folgt der Clip.`:'📌 Angeheftet! Der Clip folgt jetzt dem Punkt. Spiel das Video ab.');
+}
+function trackSection(p,c){
+  const b=section(p,'📌 Anheften (Tracking)',true);
+  if(!c.trk){
+    b.append(el('p','note','Lass diesen Clip einem Punkt im Video folgen – z. B. Text an einem Gesicht, Feuer an einer Hand oder einen Sticker an einem Auto.'));
+    const r=el('div','brow'); const go=btn('Punkt im Video wählen',()=>beginTrackPick(c),'pin'); go.classList.add('pri'); r.append(go); b.append(r);
+    b.append(el('p','note','So geht’s: Abspielposition an eine Stelle setzen, wo der Punkt gut zu sehen ist → Knopf drücken → im Bild auf den Punkt klicken. Fertig.'));
+    return; }
+  b.append(el('p','note',`Folgt einem Punkt im Video (${c.trk.raw.length} Bilder verfolgt).`));
+  slider(b,'Glätten',c.trk,'smooth',0,1,0.01,pct,v=>{ c.trk.smooth=v; trkSmooth(c.trk); });
+  const r=el('div','brow');
+  r.append(btn('Genau auf den Punkt',()=>{ const lt=localT(c); const base=trkPos(c.trk,c.trk.t0); if(!base) return;
+      /* Clip so setzen, dass er zum Zeitpunkt des Anheftens genau auf dem Punkt sitzt */
+      const pt=c.trk.t0-c.start; setValAt(c,'x',pt,base.x-0.5); setValAt(c,'y',pt,base.y-0.5); commit(); renderProps(); requestRender(); }));
+  r.append(btn('Neu anheften',()=>beginTrackPick(c),'pin'));
+  const off=btn('Lösen',()=>{ c.trk=null; commit(); renderProps(); updatePtool(); requestRender(); toast('Gelöst – der Clip folgt nicht mehr'); }); off.classList.add('dg'); r.append(off);
+  b.append(r);
+  b.append(el('p','note','Du kannst den Clip weiter frei verschieben – er bleibt dabei angeheftet.'));
+}
+function setValAt(c,key,lt,v){ if(hasKf(c,key)){ const a=c.kf[key]; for(const k of a) k.v+=v-kv(c,key,lt); } else c[key]=v; }
+function drawTrackPath(g,W,H){
+  const c=selClip(); if(!c||!c.trk||!c.trk.pts.length) return; const P=c.trk.pts, lw=Math.max(1.5,W/960);
+  g.save(); g.strokeStyle='rgba(255,122,89,.85)'; g.lineWidth=lw; g.beginPath(); P.forEach((q,i)=>{ const x=q.x*W, y=q.y*H; if(i) g.lineTo(x,y); else g.moveTo(x,y); }); g.stroke();
+  const cur=trkPos(c.trk,S.t); if(cur){ const x=cur.x*W, y=cur.y*H, r=lw*7; g.strokeStyle='#ff7a59'; g.lineWidth=lw*1.5; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.moveTo(x-r*1.6,y); g.lineTo(x-r*0.5,y); g.moveTo(x+r*0.5,y); g.lineTo(x+r*1.6,y); g.moveTo(x,y-r*1.6); g.lineTo(x,y-r*0.5); g.moveTo(x,y+r*0.5); g.lineTo(x,y+r*1.6); g.stroke(); }
+  g.restore();
+}
 function transformSection(p,c){
   const b=section(p,S.simple?'Größe & Position':'Transformieren');
   if(S.simple) b.append(el('p','note','Direkt im Vorschaubild: ziehen = verschieben, Ecken = Größe, runder Griff = drehen. Zahlen rechts anklicken zum Eintippen.'));
@@ -2602,6 +2698,7 @@ function transformSection(p,c){
   const r=el('div','brow'); r.append(btn('Zurücksetzen',()=>{ Object.assign(c,{x:0,y:0,scale:1,rotation:0,opacity:1,flipH:false}); if(c.kf) for(const k of KF_KEYS) delete c.kf[k]; commit(); updateClipEl(c); renderProps(); requestRender(); }));
   b.append(r);
   if(!S.simple) b.append(el('p','note','Keyframes: Abspielposition setzen → ◆ klicken → Abspielposition weiter → Wert ändern. Im Vorschaufenster ziehen zum Verschieben, an den Ecken skalieren, am runden Griff drehen.'));
+  trackSection(p,c);
 }
 function chromaSection(p,c){
   const b=section(p,'Freistellen (Green Screen)',!!c.ck.on), k=c.ck;
@@ -2826,6 +2923,7 @@ function lightPosSection(p,c){
   kfSlider(b,'Drehen (Y)',c,'ry',-180,180,1,v=>Math.round(v)+'°');
   kfSlider(b,'Deckkraft',c,'opacity',0,1,0.01,pct);
   b.append(el('p','note','Im Vorschaubild ziehen = verschieben. Mit 2 Ansichten (Taste 2) siehst du das Licht im Raum und kannst es wie in Blender bewegen.'));
+  trackSection(p,c);
 }
 function addLight(k='punkt',at=null){ const c=baseClip('light'); const L=LIGHT_PRESETS[k]||LIGHT_PRESETS.punkt; Object.assign(c,{x:-0.15,y:-0.15,z:0.25},L.l); c.lPreset=k; c.duration=Math.max(3,Math.min(10,(dur()||5)-(at==null?S.t:at))); placeAuto(c,'visual',at==null?S.t:at,null); S.clips.push(c); afterAdd(c);
   toast(L.n+' hinzugefügt – rechts kannst du fast alles einstellen'); }
@@ -2962,6 +3060,7 @@ stageEl.addEventListener('pointerdown',e=>{
   if(S.exporting||e.target.closest('#ptool,#empty')) return;
   if(e.button!==0 && !(e.button===2 && S.tool==='camera')) return;
   const p0=canvasPt(e), sf=screenScale();
+  if(S.pickTrack){ const tc=clipById(S.pickTrack); S.pickTrack=null; cv.classList.remove('picking'); if(tc) startTrack(tc,p0); return; }
   if(S.pick){ const pc=clipById(S.pick); S.pick=null; cv.classList.remove('picking'); if(pc){
       S.noKey=true; syncMedia(S.t,false); render(S.t); const px=ctx.getImageData(Math.floor(p0.x),Math.floor(p0.y),1,1).data; S.noKey=false;
       pc.ck.color='#'+[px[0],px[1],px[2]].map(v=>v.toString(16).padStart(2,'0')).join(''); pc.ck.on=true; commit(); renderProps(); requestRender(); toast('Farbe übernommen'); }
@@ -3054,6 +3153,7 @@ function updatePtool(){
   const canEdit=c&&canTransform(c)&&!multi;
   btnT(g3,'diamond','Keyframe','K','Keyframe an dieser Stelle setzen oder entfernen',false,!canEdit,()=>$('#bKf').click());
   btnT(g3,'undo','Zurücksetzen','','Position, Größe, Drehung und 3D zurücksetzen',false,!canEdit,()=>{ Object.assign(c,{x:0,y:0,scale:1,rotation:0,rx:0,ry:0,z:0}); if(c.kf) for(const kk of ['x','y','scale','rotation','rx','ry','z']) delete c.kf[kk]; commit(); updateClipEl(c); renderProps(); requestRender(); });
+  btnT(g3,'pin','Anheften','','An einem Punkt im Video festmachen (Tracking) – Clip folgt dann dem Punkt',!!(c&&c.trk),!canEdit,()=>beginTrackPick(c));
   const g4=grp('pseg');
   btnT(g4,'square1','1 Ansicht','','Nur die Kamera-Ansicht',!S.split,false,()=>setSplit(false));
   btnT(g4,'split2','2 Ansichten','2','Wie in After Effects/Blender: links die Kamera, rechts eine freie 3D-Arbeitsansicht',S.split,false,()=>setSplit(true));
@@ -3090,7 +3190,7 @@ function renderView2(t){
   /* Das laufende Video (alle 2D-Ebenen) als Fläche im Raum */
   if(!compC){ compC=document.createElement('canvas'); }
   if(compC.width!==w2||compC.height!==h2){ compC.width=w2; compC.height=h2; }
-  const saved=new Map(boxes), cg=compC.getContext('2d'); cg.setTransform(1,0,0,1,0,0); cg.globalAlpha=1; cg.globalCompositeOperation='source-over'; cg.filter='none'; cg.fillStyle=S.settings.bg; cg.fillRect(0,0,w2,h2);
+  const saved=new Map(boxes), cg=compC.getContext('2d'); cg.setTransform(1,0,0,1,0,0); cg.globalAlpha=1; cg.globalCompositeOperation='source-over'; cg.filter='none'; cg.clearRect(0,0,w2,h2); /* kein schwarzer Hintergrund in der 3D-Ansicht */
   const sv=ctx; ctx=cg;
   try{ cg.setTransform(w2/W,0,0,h2/H,0,0); for(const c of visibleClipsAt(t)){ if(c.type==='camera'||c.type==='effect'||is3dItem(c)) continue; const lt=t-c.start; draw2D(c,animState(c,lt,W,H),W,H,lt); } }
   catch(e){ console.warn(e); } finally{ ctx=sv; }
@@ -3204,6 +3304,7 @@ function gizHit(x,y){
 
 /* ---------- Hilfe ---------- */
 const HELP=[
+ ['Anheften / Tracking','tracking track anheften verfolgen folgen motion tracking festmachen kleben gesicht hand','So machst du einen Text, Sticker, 3D-Objekt, Feuer oder Licht an etwas im Video fest:<ol><li>Clip auswählen (z. B. einen Text).</li><li>Abspielposition dahin, wo der Punkt gut zu sehen ist.</li><li>Oben auf <b>📌 Anheften</b> klicken.</li><li>Im Vorschaubild auf den Punkt klicken (z. B. eine Nase oder ein Autoreifen).</li></ol>Das Programm verfolgt den Punkt automatisch durch das Video und der Clip folgt ihm. Mit „Glätten“ wird die Bewegung ruhiger, „Genau auf den Punkt“ setzt den Clip direkt drauf. Tipp: Nimm Punkte mit viel Kontrast (Ecken, Augen, Logos).'],
  ['Licht hinzufügen','licht lampe spotlight scheinwerfer kerze neon sonne blaulicht beleuchtung leuchten glow lens flare linsenreflex strahlen','Links im Tab <b>3D</b> unter „Licht“ ein Licht anklicken (Punktlicht, Spotlight, Kerze, Neon, Blaulicht, Scheinwerfer, Sonne, Blitz). Ein Licht <b>beleuchtet 3D-Objekte und 3D-Ebenen</b> (Videos, Bilder und Texte mit „3D-Ebene“). Rechts kannst du fast alles einstellen: <ul><li><b>Licht</b>: Art, Farbe, Farbtemperatur, Stärke, Reichweite, Abfall, Kegelwinkel und sichtbarer Lichtkegel beim Spotlight, „Umgebung abdunkeln“, Flackern und Blinken.</li><li><b>Aussehen</b>: Leuchten, Kern, Strahlen, Anamorph-Streifen und Linsenreflexe.</li><li><b>Position</b>: X, Y, Tiefe und Richtung, alles mit Keyframes.</li></ul>Mit 2 Ansichten (Taste <b>2</b>) siehst du das Licht als Symbol im Raum und verschiebst es mit dem Gizmo.'],
  ['Partikel im 3D-Raum','partikel feuer rauch funken explosion schnee regen nebel glut magie staub konfetti 3d raum effekt','Partikel aus dem Tab <b>3D</b> leben im 3D-Raum: Die Kamera fliegt durch sie hindurch, Objekte davor verdecken sie und du kannst die Quelle in der rechten Ansicht wie in Blender verschieben und drehen. Rechts gibt es fünf Bereiche: <b>Partikel</b> (Art, Menge, Lebensdauer, Quelle, Glut, Rauch, Leuchten), <b>Bewegung</b> (Tempo, Richtung, Streuung, Schwerkraft, Wind, Luftwiderstand, Turbulenz, Drehung), <b>Aussehen</b> (Form, Größe, Farben, Ein-/Ausblenden, Flackern). Mit „Neu würfeln“ bekommst du eine andere zufällige Verteilung. Feuer und Funken können selbst leuchten und Objekte in der Nähe anstrahlen.'],
  ['Zahlen eintippen','zahl eingeben genau wert tippen präzise regler','Klick auf die Zahl rechts neben einem Regler, tipp den Wert ein und drück <b>Enter</b>. Mit ↑/↓ änderst du ihn in kleinen Schritten, mit Umschalt in großen.'],
@@ -3405,7 +3506,7 @@ function init(){
     else if(mod && lk==='v'){ e.preventDefault(); pasteClip(); }
     else if(!mod && lk==='k'){ e.preventDefault(); $('#bKf').click(); }
     else if(!mod && lk==='f'){ e.preventDefault(); freezeFrame(); }
-    else if(k==='Escape'){ if(S.pick){ S.pick=null; cv.classList.remove('picking'); } else if(S.tool!=='move') setTool('move'); else select(null); }
+    else if(k==='Escape'){ if(S.pickTrack){ S.pickTrack=null; cv.classList.remove('picking'); toast('Anheften abgebrochen'); } else if(S.pick){ S.pick=null; cv.classList.remove('picking'); } else if(S.tool!=='move') setTool('move'); else select(null); }
   });
   buildStaticPanes(); updatePlayBtn(); applyCanvasSize(); commit(); renderAll(); renderMedia();
   tryRestore().finally(()=>{ saveReady=true; });
