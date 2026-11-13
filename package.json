@@ -1,0 +1,53 @@
+{
+  "name": "melonenclips",
+  "productName": "Melonenclips",
+  "version": "1.0.0",
+  "description": "Melonenclips – Video-Editor mit 3D, Effekten und Launcher",
+  "main": "electron/main.js",
+  "author": "Melonenclips",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "de.melonenclips.app",
+    "productName": "Melonenclips",
+    "files": [
+      "electron/**/*",
+      "launcher/**/*",
+      "app/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.png",
+      "artifactName": "Melonenclips-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Melonenclips",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [
+      { "provider": "github", "releaseType": "release" }
+    ]
+  }
+}
