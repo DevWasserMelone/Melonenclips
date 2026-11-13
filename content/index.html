@@ -1174,9 +1174,12 @@ function render(t){
   if(S.settings.bgMode==='blur'){ const b=act.find(c=>c.type==='video'||c.type==='image'); if(b) drawBlurBg(b,W,H); }
   let flash=0;
   let batch=[];
-  const flush=()=>{ if(batch.length){ render3D(batch,W,H,t); batch=[]; } };
-  for(const c of act){ if(c.type==='camera') continue; const lt=t-c.start, st=animState(c,lt,W,H); flash=Math.max(flash,st.flash);
-    if(c.type==='model' || (c.is3d && ['video','image','text','shape'].includes(c.type) && !(c.type==='shape'&&c.shape==='bg'))){ batch.push({c,st,lt}); continue; }
+  const is3dItem=c=>c.type==='model' || (c.is3d && ['video','image','text','shape'].includes(c.type) && !(c.type==='shape'&&c.shape==='bg'));
+  const items=act.filter(c=>c.type!=='camera').map(c=>{ const lt=t-c.start; return {c,lt,st:animState(c,lt,W,H)}; });
+  const all3d=items.filter(it=>is3dItem(it.c));
+  const flush=()=>{ if(batch.length){ const occ=all3d.length>batch.length?all3d.filter(it=>!batch.includes(it)):null; render3D(batch,W,H,t,null,null,null,occ); batch=[]; } };
+  for(const it of items){ const c=it.c, lt=it.lt, st=it.st; flash=Math.max(flash,st.flash);
+    if(is3dItem(c)){ batch.push(it); continue; }
     flush();
     if(c.type==='effect') applyEffect(c,st,W,H,lt); else draw2D(c,st,W,H,lt); }
   flush();
@@ -1407,7 +1410,7 @@ function projBox(cam,W,H,p){ const q=M4.apply(cam.vp,[p[0],p[1],p[2],1]); if(q[3
 function flatProxy(c){ const p=Object.create(c); p.x=0; p.y=0; p.rotation=0; p.parent=''; p.wigA=0; p.wigR=0; p.autoOrient=false; p.dshadow=c.dshadow;
   if(c.kf){ const k={...c.kf}; delete k.x; delete k.y; delete k.rotation; p.kf=k; } return p; }
 function lightDir(){ const L=S.settings.light||{}; const az=(L.az??-35)*Math.PI/180, el=(L.el??40)*Math.PI/180; return [Math.cos(el)*Math.sin(az),Math.sin(el),Math.cos(el)*Math.cos(az)]; }
-function render3D(items,W,H,t,camOv,outCtx,planes){
+function render3D(items,W,H,t,camOv,outCtx,planes,occ){
   const E=ensureGL(W,H);
   if(!E){ if(!camOv) for(const it of items) if(it.c.type!=='model') draw2D(it.c,it.st,W,H,it.lt); return; }
   const gl=E.gl, cam=camOv||cameraAt(t,W,H);
@@ -1415,8 +1418,7 @@ function render3D(items,W,H,t,camOv,outCtx,planes){
   gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
   const mn=Math.min(W,H);
   /* models */
-  const models=items.filter(it=>it.c.type==='model');
-  if(models.length){
+  const drawModels=(models,setBox)=>{ if(!models.length) return;
     const mp=E.mp, L=S.settings.light||{}; gl.useProgram(mp.p); gl.depthMask(true);
     gl.uniformMatrix4fv(mp.u.uView,false,cam.view); gl.uniformMatrix4fv(mp.u.uProj,false,cam.proj);
     gl.uniform3fv(mp.u.uLDir,lightDir()); const lc=hexToRgb(L.col||'#ffffff').map(v=>v/255*(L.int??1.1)); gl.uniform3fv(mp.u.uLCol,lc);
@@ -1435,13 +1437,13 @@ function render3D(items,W,H,t,camOv,outCtx,planes){
         if(c.wire){ const ln=gpuLines(E,part); gl.bindVertexArray(ln.vao); gl.drawElements(gl.LINES,ln.n,gl.UNSIGNED_INT,0); }
         else { gl.bindVertexArray(part.vao); gl.drawElements(gl.TRIANGLES,part.n,gl.UNSIGNED_INT,0); }
       }
-      const pb=projBox(cam,W,H,[px,py,pz]); if(pb) boxes.set(c.id,{cx:pb.x,cy:pb.y,w:s*pb.k*1.1,h:s*pb.k*1.1,rot:0});
+      const pb=setBox&&projBox(cam,W,H,[px,py,pz]); if(pb) boxes.set(c.id,{cx:pb.x,cy:pb.y,w:s*pb.k*1.1,h:s*pb.k*1.1,rot:0});
     }
     gl.bindVertexArray(null);
-  }
+  };
   /* 3D layers */
-  const layers=[];
-  for(const it of items){ if(it.c.type==='model') continue; const c=it.c, st=it.st, lt=it.lt, X=xf(c,lt);
+  const makeLayers=(list,setBox)=>{ const layers=[];
+  for(const it of list){ if(it.c.type==='model') continue; const c=it.c, st=it.st, lt=it.lt, X=xf(c,lt);
     let lc=E.layerCv.get(c.id); if(!lc){ const cc=document.createElement('canvas'); lc={c:cc,g:cc.getContext('2d')}; E.layerCv.set(c.id,lc); }
     if(lc.c.width!==W||lc.c.height!==H){ lc.c.width=W; lc.c.height=H; }
     lc.g.setTransform(1,0,0,1,0,0); lc.g.clearRect(0,0,W,H);
@@ -1451,13 +1453,13 @@ function render3D(items,W,H,t,camOv,outCtx,planes){
     const M=M4.chain(M4.T(px,py,pz),M4.RY(kv(c,'ry',lt)*Math.PI/180),M4.RX(kv(c,'rx',lt)*Math.PI/180),M4.RZ(-(X.rot*Math.PI/180+st.rot)),M4.S(W,H,1));
     const vz=M4.apply(cam.view,[px,py,pz,1])[2];
     layers.push({c,M,vz,lc});
-    const pb=projBox(cam,W,H,[px,py,pz]);
+    const pb=setBox&&projBox(cam,W,H,[px,py,pz]);
     if(pb && fb){ const rx=kv(c,'rx',lt)*Math.PI/180, ry=kv(c,'ry',lt)*Math.PI/180; boxes.set(c.id,{cx:pb.x+(fb.cx-W/2)*pb.k,cy:pb.y+(fb.cy-H/2)*pb.k,w:fb.w*pb.k*Math.max(0.15,Math.abs(Math.cos(ry))),h:fb.h*pb.k*Math.max(0.15,Math.abs(Math.cos(rx))),rot:fb.rot+X.rot*Math.PI/180}); }
   }
-  if(planes) for(const pl of planes){ layers.push({c:{id:pl.id},M:pl.M,vz:M4.apply(cam.view,[0,0,0,1])[2],lc:{c:pl.canvas}}); }
-  if(layers.length){
+  return layers; };
+  const drawLayers=(layers,writeDepth)=>{ if(!layers.length) return;
     layers.sort((a,b)=>a.vz-b.vz);
-    const lp=E.lp; gl.useProgram(lp.p); gl.depthMask(false); gl.bindVertexArray(E.qv); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(lp.u.uTex,0);
+    const lp=E.lp; gl.useProgram(lp.p); gl.depthMask(!!writeDepth); gl.bindVertexArray(E.qv); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(lp.u.uTex,0);
     for(const L of layers){
       let tx=E.layerTex.get(L.c.id); if(!tx){ tx=gl.createTexture(); E.layerTex.set(L.c.id,tx); }
       gl.bindTexture(gl.TEXTURE_2D,tx); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
@@ -1467,7 +1469,13 @@ function render3D(items,W,H,t,camOv,outCtx,planes){
       gl.uniformMatrix4fv(lp.u.uMVP,false,M4.mul(cam.vp,L.M)); gl.drawArrays(gl.TRIANGLES,0,6);
     }
     gl.bindVertexArray(null); gl.depthMask(true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
-  }
+  };
+  /* Objekte aus anderen Ebenen-Gruppen verdecken nur (Tiefe), werden aber nicht gezeichnet */
+  if(occ&&occ.length){ gl.colorMask(false,false,false,false); drawModels(occ.filter(it=>it.c.type==='model'),false); const keep=new Map(boxes); drawLayers(makeLayers(occ,false),true); boxes.clear(); for(const [k,v] of keep) boxes.set(k,v); gl.colorMask(true,true,true,true); }
+  drawModels(items.filter(it=>it.c.type==='model'),true);
+  const layers=makeLayers(items,true);
+  if(planes) for(const pl of planes){ layers.push({c:{id:pl.id},M:pl.M,vz:M4.apply(cam.view,[0,0,0,1])[2],lc:{c:pl.canvas}}); }
+  drawLayers(layers,false);
   const oc=outCtx||ctx; oc.save(); oc.setTransform(1,0,0,1,0,0); oc.globalAlpha=1; oc.globalCompositeOperation='source-over'; oc.filter='none'; oc.drawImage(E.c,0,0,oc.canvas.width,oc.canvas.height); oc.restore();
 }
 
