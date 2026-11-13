@@ -141,6 +141,15 @@ textarea{width:100%;resize:vertical;min-height:64px}
 .kfnav .btn.kfall .i{color:#ffd400}
 #cv.picking{cursor:crosshair}
 #stage{padding-top:52px}
+#stage{gap:12px}
+.vp{position:relative;flex:1 1 0;min-width:0;align-self:stretch;display:flex;align-items:center;justify-content:center}
+.vp canvas{max-width:100%;max-height:100%;display:block;touch-action:none}
+#cv2{background:#14161b;box-shadow:0 8px 30px rgba(0,0,0,.5);cursor:grab}
+.vlabel{position:absolute;top:0;left:0;z-index:3;display:none;gap:6px;align-items:center;font-size:11px;color:var(--tx);background:rgba(13,14,18,.85);border:1px solid var(--line);border-radius:6px;padding:3px 6px}
+#stage.split .vlabel{display:flex}
+.vlabel select{padding:2px 4px;font-size:11px}
+.vlabel button{background:var(--p3);border:1px solid var(--line);color:var(--tx);border-radius:5px;padding:2px 7px;font:inherit;font-size:11px;cursor:pointer}
+.vlabel button:hover{border-color:var(--ac)}
 #ovl{position:absolute;inset:0;pointer-events:none;z-index:2;width:100%;height:100%}
 #ptool{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:rgba(21,23,29,.94);border:1px solid var(--line);border-radius:10px;padding:3px;z-index:3;box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap}
 #ptool .pt{display:flex;align-items:center;gap:5px;background:none;border:none;color:var(--tx);padding:6px 9px;border-radius:7px;cursor:pointer;font:inherit;font-size:12px}
@@ -264,7 +273,8 @@ input[type=color]{width:38px;height:26px;border:1px solid var(--line);border-rad
 
     <section id="center">
       <div id="stage">
-        <canvas id="cv" width="1920" height="1080"></canvas>
+        <div class="vp" id="vp1"><div class="vlabel" id="v1lab">🎥 Aktive Kamera</div><canvas id="cv" width="1920" height="1080"></canvas></div>
+        <div class="vp hidden" id="vp2"><div class="vlabel"><select id="v2sel" title="Blickwinkel der Arbeitsansicht"></select><button id="v2cam" title="Die aktive Kamera auf diesen Blickwinkel setzen">📷 Kamera von hier</button></div><canvas id="cv2" width="960" height="540"></canvas></div>
         <canvas id="ovl"></canvas>
         <div id="ptool" class="hidden"></div>
         <div id="ptip" class="hidden"></div>
@@ -413,6 +423,7 @@ const IC = {
  diamond:'<path d="M12 3l9 9-9 9-9-9z"/>',
  freeze:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9v6M14 9v6"/>',
  rec:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/>',
+ split2:'<rect x="2" y="5" width="9" height="14" rx="1.5"/><rect x="13" y="5" width="9" height="14" rx="1.5"/>',
  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/>',
  hand:'<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L3.5 14a1.5 1.5 0 0 1 2.5-1.6L8 15"/>',
  rot3d:'<path d="M12 3v18M3 12c0-3 4-5 9-5s9 2 9 5-4 5-9 5"/><path d="m18 14 3-2-2-3"/>',
@@ -1135,6 +1146,7 @@ function render(t){
   flush();
   if(flash>0){ ctx.globalAlpha=flash; ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
   if(!S.exporting) drawOverlay(W,H);
+  if(S.split && !S.exporting) renderView2(t);
 }
 function drawOverlay(W,H){
   const lw=Math.max(2,W/640);
@@ -1353,16 +1365,16 @@ function cameraAt(t,W,H){
   const pos=[tgt[0]+dist*Math.sin(oy)*Math.cos(ox), tgt[1]+dist*Math.sin(ox), tgt[2]+dist*Math.cos(oy)*Math.cos(ox)];
   let view=M4.lookAt(pos,tgt,[0,1,0]); const roll=g('roll'); if(roll) view=M4.mul(M4.RZ(-roll*Math.PI/180),view);
   const proj=M4.persp(fov,W/H,D0*0.02,D0*40);
-  return {view,proj,pos,D0,vp:M4.mul(proj,view)};
+  return {view,proj,pos,D0,vp:M4.mul(proj,view),tgt,fov};
 }
 function projBox(cam,W,H,p){ const q=M4.apply(cam.vp,[p[0],p[1],p[2],1]); if(q[3]<=1e-3) return null; return {x:(q[0]/q[3]+1)/2*W, y:(1-q[1]/q[3])/2*H, k:(H/2)*cam.proj[5]/q[3]}; }
 function flatProxy(c){ const p=Object.create(c); p.x=0; p.y=0; p.rotation=0; p.parent=''; p.wigA=0; p.wigR=0; p.autoOrient=false; p.dshadow=c.dshadow;
   if(c.kf){ const k={...c.kf}; delete k.x; delete k.y; delete k.rotation; p.kf=k; } return p; }
 function lightDir(){ const L=S.settings.light||{}; const az=(L.az??-35)*Math.PI/180, el=(L.el??40)*Math.PI/180; return [Math.cos(el)*Math.sin(az),Math.sin(el),Math.cos(el)*Math.cos(az)]; }
-function render3D(items,W,H,t){
+function render3D(items,W,H,t,camOv,outCtx){
   const E=ensureGL(W,H);
-  if(!E){ for(const it of items) if(it.c.type!=='model') draw2D(it.c,it.st,W,H,it.lt); return; }
-  const gl=E.gl, cam=cameraAt(t,W,H);
+  if(!E){ if(!camOv) for(const it of items) if(it.c.type!=='model') draw2D(it.c,it.st,W,H,it.lt); return; }
+  const gl=E.gl, cam=camOv||cameraAt(t,W,H);
   gl.viewport(0,0,W,H); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
   const mn=Math.min(W,H);
@@ -1419,7 +1431,7 @@ function render3D(items,W,H,t){
     }
     gl.bindVertexArray(null); gl.depthMask(true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
   }
-  ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; ctx.filter='none'; ctx.drawImage(E.c,0,0); ctx.restore();
+  const oc=outCtx||ctx; oc.save(); oc.setTransform(1,0,0,1,0,0); oc.globalAlpha=1; oc.globalCompositeOperation='source-over'; oc.filter='none'; oc.drawImage(E.c,0,0,oc.canvas.width,oc.canvas.height); oc.restore();
 }
 
 /* ---------- Particles ---------- */
@@ -2232,7 +2244,7 @@ function projectProps(p){
   slider(lb,'Stärke',L,'int',0,3,0.05,pct); slider(lb,'Umgebung',L,'amb',0,1.5,0.01,pct); colorRow(lb,'Lichtfarbe',L,'col');
   const k=section(p,'Tastenkürzel');
   const kb=el('div','kb');
-  for(const [a,d] of [['Leertaste','Abspielen / Pause'],['S','Teilen'],['Entf','Clip löschen'],['⇧ + Entf','Löschen & Lücke schließen'],['Strg+D','Duplizieren'],['K','Keyframe setzen/entfernen'],['M','Marker setzen/entfernen'],['V / R / C','Werkzeug: Bewegen / 3D drehen / Kamera'],['F1','Hilfe'],['Strg+C / V','Clip kopieren / einfügen'],['F','Standbild einfügen'],['Strg+Z / Y','Rückgängig / Wiederholen'],['← →','1 Bild (mit ⇧: 1 Sek.)'],['Pos1 / Ende','Anfang / Ende'],['+ / −','Timeline zoomen'],['Esc','Auswahl aufheben']]){ const kk=el('kbd',null,a); kb.append(kk,el('span',null,d)); }
+  for(const [a,d] of [['Leertaste','Abspielen / Pause'],['S','Teilen'],['Entf','Clip löschen'],['⇧ + Entf','Löschen & Lücke schließen'],['Strg+D','Duplizieren'],['K','Keyframe setzen/entfernen'],['M','Marker setzen/entfernen'],['V / R / C','Werkzeug: Bewegen / 3D drehen / Kamera'],['2','Zwei Ansichten an/aus'],['F1','Hilfe'],['Strg+C / V','Clip kopieren / einfügen'],['F','Standbild einfügen'],['Strg+Z / Y','Rückgängig / Wiederholen'],['← →','1 Bild (mit ⇧: 1 Sek.)'],['Pos1 / Ende','Anfang / Ende'],['+ / −','Timeline zoomen'],['Esc','Auswahl aufheben']]){ const kk=el('kbd',null,a); kb.append(kk,el('span',null,d)); }
   k.append(kb);
   const h=section(p,'So geht’s',false);
   h.append(el('p','note','1. Medien links importieren und mit + oder per Ziehen auf die Timeline bringen. 2. Clips verschieben, an den Rändern kürzen, mit S teilen. 3. Clip anklicken → rechts Text, Größe, Filter, Animation, Tempo und Ton anpassen. 4. Oben rechts exportieren.'));
@@ -2492,6 +2504,8 @@ function updatePtool(){
   tb('rot3d','rot3d','3D drehen','Den Clip im Raum kippen und drehen – macht ihn automatisch zur 3D-Ebene',S.tool==='rot3d',c&&!canRot3d(c));
   tb('depth','depth','Tiefe','Den Clip nach vorne oder hinten schieben',S.tool==='depth',c&&!canRot3d(c));
   tb('camera','camera','Kamera','3D-Kamera mit der Maus bewegen (wird bei Bedarf automatisch angelegt)',S.tool==='camera');
+  bar.append(el('span','psep'));
+  const sp=el('button','pt'+(S.split?' on':'')); sp.innerHTML=ic('split2')+'<span>2 Ansichten</span>'; sp.title='Zweite Ansicht wie in After Effects: links die Kamera, rechts eine freie 3D-Ansicht (Taste 2)'; sp.onclick=()=>setSplit(!S.split); bar.append(sp);
   if(c && canTransform(c)){
     bar.append(el('span','psep'));
     const k=el('button','pt'); k.innerHTML=ic('diamond')+'<span>Keyframe</span>'; k.title='Keyframe an dieser Stelle setzen (K)'; k.onclick=()=>$('#bKf').click(); bar.append(k);
@@ -2502,6 +2516,71 @@ function updatePtool(){
   $('#ptip').classList.toggle('hidden',!S.clips.length);
   void has3d;
 }
+
+/* ---------- Zweite Ansicht (wie After Effects: Aktive Kamera + Arbeitsansicht) ---------- */
+S.split=false; S.v2={yaw:-38,pitch:24,dist:3.4,tx:0,ty:0,tz:-0.4,preset:'free'};
+const V2_PRESETS={free:['Eigene Ansicht',-38,24,3.4],top:['Oben',0,89,4.2],front:['Vorne',0,0,2.8],left:['Links',-90,0,3.4],right:['Rechts',90,0,3.4],back:['Hinten',180,0,3.4]};
+function editorCam(W,H){
+  const v=S.v2, D0=(H/2)/Math.tan(25*Math.PI/180), tgt=[v.tx*W,v.ty*H,v.tz*W];
+  const yaw=v.yaw*Math.PI/180, pit=clamp(v.pitch,-89,89)*Math.PI/180, d=D0*v.dist;
+  const pos=[tgt[0]+d*Math.sin(yaw)*Math.cos(pit), tgt[1]+d*Math.sin(pit), tgt[2]+d*Math.cos(yaw)*Math.cos(pit)];
+  const view=M4.lookAt(pos,tgt,[0,1,0]), proj=M4.persp(50*Math.PI/180,W/H,D0*0.02,D0*300);
+  return {view,proj,pos,D0,vp:M4.mul(proj,view),tgt};
+}
+function items3DAt(t,W,H){ const out=[]; for(const c of visibleClipsAt(t)){ if(c.type==='model'||(c.is3d&&['video','image','text','shape'].includes(c.type)&&!(c.type==='shape'&&c.shape==='bg'))){ const lt=t-c.start; out.push({c,lt,st:animState(c,lt,W,H)}); } } return out; }
+function renderView2(t){
+  const c2=$('#cv2'); if(!c2) return; const W=cv.width, H=cv.height, w2=Math.round(W*0.5), h2=Math.round(H*0.5);
+  if(c2.width!==w2||c2.height!==h2){ c2.width=w2; c2.height=h2; }
+  const g=c2.getContext('2d'), ec=editorCam(W,H), k=w2/W; g.setTransform(1,0,0,1,0,0); g.globalAlpha=1;
+  const bg=g.createLinearGradient(0,0,0,h2); bg.addColorStop(0,'#1d212b'); bg.addColorStop(1,'#101217'); g.fillStyle=bg; g.fillRect(0,0,w2,h2);
+  const P=p=>{ const q=M4.apply(ec.vp,[p[0],p[1],p[2],1]); if(q[3]<=1e-3) return null; return [(q[0]/q[3]+1)/2*w2,(1-q[1]/q[3])/2*h2]; };
+  const line=(a,b,seg=1)=>{ let prev=null; for(let i=0;i<=seg;i++){ const f=i/seg, p=P([a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f]); if(p&&prev){ g.moveTo(prev[0],prev[1]); g.lineTo(p[0],p[1]); } prev=p; } };
+  /* Boden-Raster */
+  const gy=-H/2, ext=W*2.5, st=W/4; g.lineWidth=1;
+  for(let x=-ext;x<=ext+1;x+=st){ g.beginPath(); g.strokeStyle=Math.abs(x)<1?'rgba(255,90,118,.45)':'rgba(255,255,255,.07)'; line([x,gy,-ext*1.6],[x,gy,ext*0.8],16); g.stroke(); }
+  for(let z=-ext*1.6;z<=ext*0.8+1;z+=st){ g.beginPath(); g.strokeStyle=Math.abs(z)<1?'rgba(90,160,255,.45)':'rgba(255,255,255,.07)'; line([-ext,gy,z],[ext,gy,z],16); g.stroke(); }
+  /* 3D-Inhalte */
+  const items=items3DAt(t,W,H), saved=new Map(boxes);
+  if(items.length){ try{ render3D(items,W,H,t,ec,g); }finally{ boxes.clear(); for(const [a,b] of saved) boxes.set(a,b); } }
+  /* Bildfläche (2D-Ebene der Komposition) */
+  g.setLineDash([6,4]); g.strokeStyle='rgba(34,227,211,.7)'; g.lineWidth=1.2; g.beginPath();
+  const fr=[[-W/2,H/2,0],[W/2,H/2,0],[W/2,-H/2,0],[-W/2,-H/2,0]]; for(let i=0;i<4;i++) line(fr[i],fr[(i+1)%4],8); g.stroke(); g.setLineDash([]);
+  /* Auswahl hervorheben */
+  S.v2hits=[];
+  for(const it of items){ const X=xf(it.c,it.lt), p=P([X.x*W+it.st.dx,-(X.y*H+it.st.dy),kv(it.c,'z',it.lt)*W]); if(!p) continue; S.v2hits.push({id:it.c.id,x:p[0],y:p[1]});
+    if(it.c.id===S.selected){ g.strokeStyle='#ffffff'; g.lineWidth=2; g.beginPath(); g.arc(p[0],p[1],9,0,Math.PI*2); g.stroke(); } }
+  /* Aktive Kamera als Symbol */
+  const cam=cameraAt(t,W,H), m=cam.view, R=[m[0],m[4],m[8]], U=[m[1],m[5],m[9]], F=[-m[2],-m[6],-m[10]];
+  const d=cam.D0*0.5, hh=d*Math.tan(cam.fov/2), hw=hh*W/H, cen=[cam.pos[0]+F[0]*d,cam.pos[1]+F[1]*d,cam.pos[2]+F[2]*d];
+  const cor=[[-1,1],[1,1],[1,-1],[-1,-1]].map(([a,b])=>[cen[0]+R[0]*hw*a+U[0]*hh*b,cen[1]+R[1]*hw*a+U[1]*hh*b,cen[2]+R[2]*hw*a+U[2]*hh*b]);
+  const camSel=S.clips.some(c=>c.type==='camera'&&c.id===S.selected);
+  g.strokeStyle=camSel?'#ffffff':'#ffd400'; g.lineWidth=2.2; g.beginPath(); for(const q of cor) line(cam.pos,q); for(let i=0;i<4;i++) line(cor[i],cor[(i+1)%4]); g.stroke();
+  const top=[cen[0]+U[0]*hh*1.5,cen[1]+U[1]*hh*1.5,cen[2]+U[2]*hh*1.5]; g.beginPath(); line(cor[0],top); line(top,cor[1]); g.stroke();
+  g.setLineDash([3,4]); g.globalAlpha=0.6; g.beginPath(); line(cam.pos,cam.tgt,6); g.stroke(); g.setLineDash([]); g.globalAlpha=1;
+  const cp=P(cam.pos); if(cp){ g.fillStyle=camSel?'#ffffff':'#ffd400'; g.font='600 11px system-ui,sans-serif'; g.fillText('🎥 Kamera',cp[0]+8,cp[1]-8); const cid=(visibleClipsAt(t).filter(c=>c.type==='camera').pop()||{}).id; if(cid) S.v2hits.push({id:cid,x:cp[0],y:cp[1]}); }
+  if(!items.length){ g.fillStyle='rgba(255,255,255,.55)'; g.font='12px system-ui,sans-serif'; g.textAlign='center'; g.fillText('Noch keine 3D-Ebenen oder 3D-Objekte an dieser Stelle',w2/2,h2-14); g.textAlign='left'; }
+}
+function setSplit(on){
+  S.split=on; $('#stage').classList.toggle('split',on); $('#vp2').classList.toggle('hidden',!on); updatePtool(); requestRender();
+  if(on) toast('Links: was die Kamera sieht · Rechts: freie 3D-Ansicht (ziehen = drehen, Mausrad = zoomen)');
+}
+function setV2Preset(k){ const p=V2_PRESETS[k]; if(!p) return; Object.assign(S.v2,{preset:k,yaw:p[1],pitch:p[2],dist:p[3],tx:0,ty:0,tz:k==='free'?-0.4:0}); $('#v2sel').value=k; requestRender(); }
+(function initView2(){
+  const c2=$('#cv2'), sel=$('#v2sel');
+  for(const [k,v] of Object.entries(V2_PRESETS)){ const o=el('option',null,v[0]); o.value=k; sel.append(o); }
+  sel.onchange=()=>{ setV2Preset(sel.value); sel.blur(); };
+  $('#v2cam').onclick=()=>{ const cam=activeCamera(true), v=S.v2; setVal(cam,'orbitY',v.yaw); setVal(cam,'orbitX',clamp(v.pitch,-89,89)); setVal(cam,'dist',v.dist); setVal(cam,'panX',v.tx); setVal(cam,'panY',-v.ty); commit(); updateClipEl(cam); refreshKf(); requestRender(); toast('Die aktive Kamera schaut jetzt aus dieser Ansicht'); };
+  let drag=null;
+  c2.addEventListener('pointerdown',e=>{ if(e.button!==0) return; e.stopPropagation(); drag={x:e.clientX,y:e.clientY,v:{...S.v2},moved:false,pan:e.shiftKey||e.button===1}; c2.setPointerCapture(e.pointerId); c2.style.cursor='grabbing'; });
+  c2.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>3) drag.moved=true; if(!drag.moved) return;
+    if(drag.pan){ const r=c2.getBoundingClientRect(), f=drag.v.dist*0.9, yaw=drag.v.yaw*Math.PI/180; S.v2.tx=drag.v.tx-dx/r.width*f*Math.cos(yaw); S.v2.tz=drag.v.tz+dx/r.width*f*Math.sin(yaw); S.v2.ty=drag.v.ty+dy/r.height*f; }
+    else { S.v2.yaw=drag.v.yaw-dx*0.4; S.v2.pitch=clamp(drag.v.pitch+dy*0.4,-89,89); }
+    S.v2.preset='free'; $('#v2sel').value='free'; requestRender(); });
+  c2.addEventListener('pointerup',e=>{ c2.style.cursor=''; if(drag && !drag.moved){ const r=c2.getBoundingClientRect(), x=(e.clientX-r.left)*c2.width/r.width, y=(e.clientY-r.top)*c2.height/r.height;
+      let best=null,bd=30*c2.width/r.width; for(const h of (S.v2hits||[])){ const d=Math.hypot(h.x-x,h.y-y); if(d<bd){ bd=d; best=h; } } select(best?best.id:null); } drag=null; });
+  c2.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); S.v2.dist=clamp(S.v2.dist*(e.deltaY<0?1/1.1:1.1),0.3,30); requestRender(); },{passive:false});
+  c2.addEventListener('dblclick',()=>setV2Preset('free'));
+})();
 
 /* ---------- Hilfe ---------- */
 const HELP=[
@@ -2534,6 +2613,7 @@ const HELP=[
  ['3D: Clips im Raum drehen','3d ebene drehen kippen raum perspektive tiefe','Oben über dem Bild „<b>3D drehen</b>“ wählen und auf einem Clip ziehen: links/rechts dreht, hoch/runter kippt. Mit „<b>Tiefe</b>“ ziehst du ihn nach vorne oder hinten. Der Clip wird dabei automatisch zur 3D-Ebene. Tipp: Mit gedrückter <b>Alt</b>-Taste geht 3D-Drehen auch im Bewegen-Modus.'],
  ['3D-Objekte & Modelle','3d objekt würfel kugel modell glb licht material','Tab <b>3D</b>: Würfel, Kugel, Torus & Co. anklicken oder ein eigenes .glb-Modell importieren. Farbe, Metall, Rauheit und Auto-Drehung rechts einstellen. Das Licht stellst du ohne Auswahl rechts unter „Projekt → 3D-Licht“ ein.'],
  ['3D-Kamera','kamera 3d orbit fahrt zoom schwenk vertigo','Oben über dem Bild „<b>Kamera</b>“ wählen und im Bild ziehen – die Kamera fliegt um deine 3D-Sachen. Mausrad zoomt, Umschalt+Ziehen verschiebt. Fertige Kamerafahrten (Orbit, Ranfahren, Vorbeiflug …) findest du rechts, wenn der Kamera-Clip ausgewählt ist. Normale 2D-Clips bleiben fest im Bild.'],
+ ['Zwei Ansichten (wie After Effects)','zwei ansichten 2 view perspektive arbeitsansicht oben vorne seite kamera sehen after effects','Oben über dem Bild auf <b>2 Ansichten</b> klicken (Taste <b>2</b>):<ul><li><b>Links: Aktive Kamera</b> – genau das, was im fertigen Video zu sehen ist.</li><li><b>Rechts: Arbeitsansicht</b> – du schaust von außen auf deine 3D-Szene. Die gelbe Pyramide ist die Kamera, die türkise gestrichelte Fläche ist dein Bild.</li></ul>In der rechten Ansicht: <b>ziehen</b> = drumherum drehen, <b>Mausrad</b> = zoomen, <b>Umschalt+Ziehen</b> = verschieben, <b>Doppelklick</b> = zurücksetzen. Oben links wählst du Oben, Vorne, Links, Rechts oder Hinten. Klick auf ein Objekt wählt es aus. „<b>Kamera von hier</b>“ setzt die echte Kamera auf diesen Blickwinkel.'],
  ['Partikel','partikel funken schnee konfetti feuer rauch regen explosion','Tab <b>3D</b> → Partikel anklicken. Die Quelle verschiebst du im Vorschaubild, Menge, Größe, Tempo, Schwerkraft und Farbe rechts.'],
  ['Parent, Wiggle, Auto-Ausrichten','parent eltern folgen wiggle zittern ausrichten pfad motion after effects','Im <b>Profi-Modus</b> unter „Motion“: Mit <b>Parent</b> folgt ein Clip einem anderen. <b>Wiggle</b> erzeugt zufällige Bewegung. <b>Auto-Ausrichten</b> dreht den Clip in Bewegungsrichtung. Die Keyframe-Schleife wiederholt Animationen.'],
  ['Format ändern (TikTok, YouTube …)','format seitenverhältnis 9:16 16:9 tiktok reels youtube hochformat querformat hintergrund','Unter dem Vorschaubild links das Format wählen, z. B. <b>9:16</b> für TikTok/Reels. Klickst du ins Leere, kannst du rechts als Hintergrund „Unscharfes Video“ einstellen – wie bei CapCut.'],
@@ -2690,6 +2770,7 @@ function init(){
     else if(k==='-'){ zoomTo(S.pps/1.3); }
     else if(k==='F1'||k==='?'){ e.preventDefault(); openHelp(); }
     else if(!mod && lk==='v'){ setTool('move'); }
+    else if(!mod && k==='2'){ setSplit(!S.split); }
     else if(!mod && lk==='r'){ setTool('rot3d'); }
     else if(!mod && lk==='c'){ setTool('camera'); }
     else if(!mod && lk==='m'){ e.preventDefault(); toggleMarker(); }
