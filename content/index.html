@@ -963,7 +963,7 @@ async function importFiles(files){
 }
 
 /* ---------- Media library ---------- */
-function renderMedia(){
+function renderMedia(){ setTimeout(aeRefresh,0);
   const list=$('#mediaList'); list.innerHTML='';
   for(const m of S.media){
     const it=el('div','mitem'+(m.loading?' loading':'')); it.draggable=!m.loading;
@@ -2852,7 +2852,8 @@ function aiBeatGrid(m){
   const n=P.length, e=new Float32Array(n); for(let i=1;i<n;i++) e[i]=Math.max(0,P[i]-P[i-1]);
   let mean=0; for(const v of e) mean+=v; mean/=n; for(let i=0;i<n;i++) e[i]=Math.max(0,e[i]-mean*0.5);
   let best=0,bestL=0; const sc=[];
-  for(let bpm=70;bpm<=180;bpm+=0.5){ const L=60/bpm*R; let s=0, k=0; for(let i=0;i+L*2<n;i+=1){ const j=i+L, j0=Math.floor(j), f=j-j0; s+=e[i]*(e[j0]*(1-f)+(e[j0+1]||0)*f); k++; }
+  const ei=x=>{ const x0=Math.floor(x), f=x-x0; return (e[x0]||0)*(1-f)+(e[x0+1]||0)*f; };
+  for(let bpm=70;bpm<=180;bpm+=0.5){ const L=60/bpm*R; let s=0, k=0; for(let i=0;i+L*8<n;i+=1){ s+=e[i]*(ei(i+L)+0.7*ei(i+2*L)+0.5*ei(i+4*L)+0.35*ei(i+8*L)); k++; }
     s/=k||1; s*=1+0.15*Math.exp(-Math.pow((bpm-120)/40,2)); sc.push([bpm,s]); if(s>best){ best=s; bestL=L; } }
   if(!bestL) return null; const bpm=60*R/bestL;
   let bp=0,bs=-1; for(let ph=0;ph<bestL;ph+=0.5){ let s=0; for(let x=ph;x<n;x+=bestL){ const i=Math.round(x); s+=(e[i]||0)+0.5*((e[i-1]||0)+(e[i+1]||0)); } if(s>bs){ bs=s; bp=ph; } }
@@ -2985,10 +2986,120 @@ async function aiLoudness(){
 }
 async function aiMagic(){ /* alles auf einmal */
   const mus=aiMusicClip(); if(mus&&mus.type==='audio') aiCutToBeat(); await aiEnhance(); await aiLoudness(); toast('🪄 Fertig! Schnitt, Farben und Lautstärke automatisch gemacht – mit Strg+Z kannst du alles zurücknehmen'); }
+/* ---------- Auto-Edit: Rohmaterial + Lied rein, fertiger Edit raus ---------- */
+const AE={len:'full',aspect:'9:16',tempo:'auto',trans:'mix',zoom:true,enhance:true,orig:false,best:true,follow:true,song:null,skip:new Set()};
+function aeEnergy(m,t0,t1){ const R=m.peaksRate, P=m.peaks; let s=0,n=0; for(let i=Math.floor(t0*R);i<Math.min(P.length,Math.ceil(t1*R));i++){ s+=P[i]; n++; } return n?s/n:0; }
+async function aeAnalyze(m,cancel,label,idx,cnt){
+  if(m.type==='image') return {img:true,n:1,step:1,sc:[0.5],cut:[0],dur:999};
+  const step=m.duration>120?1:0.5, times=[]; for(let t=0.1;t<m.duration-0.1;t+=step) times.push(t); if(!times.length) times.push(0);
+  const F=await aiFrames(m,times,64,cancel,`${label} (${idx}/${cnt})`);
+  const n=F.frames.length, mot=new Float32Array(n), shp=new Float32Array(n), skin=new Float32Array(n), lum=new Float32Array(n), cut=new Float32Array(n); let prevY=null, prevH=null;
+  F.frames.forEach((d,k)=>{ const w=F.w,h=F.h, Y=new Float32Array(w*h), H=new Float32Array(48); let e=0,sk=0,L=0;
+    for(let i=0,j=0;i<w*h;i++,j+=4){ const r=d[j],g=d[j+1],b=d[j+2]; Y[i]=0.299*r+0.587*g+0.114*b; L+=Y[i]; H[r>>4]++; H[16+(g>>4)]++; H[32+(b>>4)]++;
+      const cb=128-0.168736*r-0.331264*g+0.5*b, cr=128+0.5*r-0.418688*g-0.081312*b; if(cb>=77&&cb<=127&&cr>=137&&cr<=173&&Y[i]>50) sk++; }
+    for(let y=0;y<h;y++) for(let x=0;x<w-1;x++) e+=Math.abs(Y[y*w+x]-Y[y*w+x+1]);
+    let mo=0; if(prevY) for(let i=0;i<w*h;i++) mo+=Math.abs(Y[i]-prevY[i]);
+    let hd=0; if(prevH) for(let q=0;q<48;q++) hd+=Math.abs(H[q]-prevH[q]); hd/=3*w*h;
+    mot[k]=mo/(w*h); shp[k]=e/(w*h); skin[k]=sk/(w*h); lum[k]=L/(w*h)/255; cut[k]=hd>0.45?1:0; prevY=Y; prevH=H; });
+  const p90=a=>{ const s=[...a].sort((x,y)=>x-y); return s[Math.floor(s.length*0.9)]||1; }, mm=p90(mot)||1, sm=p90(shp)||1;
+  const sc=new Float32Array(n); for(let k=0;k<n;k++){ const exp=lum[k]<0.08||lum[k]>0.95?0.4:1; sc[k]=(0.45*Math.min(1,mot[k]/mm)+0.35*Math.min(1,shp[k]/sm)+0.4*Math.min(1,skin[k]*6))*exp; }
+  return {n,step,sc,mot:Array.from(mot).map(v=>Math.min(1,v/mm)),cut,dur:m.duration,t0:times[0]};
+}
+async function autoEdit(){
+  const song=AE.song?mediaById(AE.song):null, raw=S.media.filter(m=>(m.type==='video'||m.type==='image')&&!m.loading&&!AE.skip.has(m.id)&&m.id!==AE.song);
+  if(!song){ toast('Wähle zuerst ein Lied (oder ein Video mit Ton) als Sound'); return; }
+  if(!raw.length){ toast('Füge zuerst Rohmaterial hinzu (Videos oder Bilder)'); return; }
+  if(!song.peaks){ toast('Der Sound wird noch analysiert – einen Moment …'); return; }
+  if(S.clips.length && !confirm('Der Auto-Edit ersetzt die aktuelle Timeline.\n(Mit Strg+Z kannst du sie zurückholen.)')) return;
+  const cancel={c:false}; busyWithCancel('🎬 Höre mir den Sound an …',()=>{ cancel.c=true; });
+  try{
+    /* 1) Musik: Takt, Energie, bester Abschnitt */
+    let g=aiBeatGrid(song); if(!g){ const bt=[]; for(let t=0;t<song.duration;t+=0.5) bt.push(t); g={bpm:120,beats:bt}; }
+    const want=AE.len==='full'?song.duration:Math.min(song.duration,+AE.len); let st=0;
+    if(AE.best&&want<song.duration-1){ let best=-1; for(let i=0;i<g.beats.length;i+=4){ const b=g.beats[i]; if(b+want>song.duration) break; const e=aeEnergy(song,b,b+want)+0.5*aeEnergy(song,b,b+Math.min(4,want)); if(e>best){ best=e; st=b; } } }
+    const B=g.beats.filter(b=>b>=st-0.01&&b<st+want-0.05).map(b=>b-st); if(!B.length||B[0]>0.05) B.unshift(0);
+    const eb=B.map((b,i)=>aeEnergy(song,st+b,st+(B[i+1]??want))); const sorted=[...eb].sort((a,b)=>a-b), lo=sorted[Math.floor(sorted.length*0.15)]||0, hi=sorted[Math.floor(sorted.length*0.9)]||1;
+    const en=eb.map(e=>clamp((e-lo)/((hi-lo)||1),0,1));
+    const stepOf=i=>AE.tempo==='slow'?4:AE.tempo==='normal'?2:AE.tempo==='fast'?1:(en[i]>0.72?1:en[i]>0.4?2:4);
+    const cuts=[]; for(let i=0;i<B.length;){ cuts.push({t:B[i],e:en[i]}); i+=stepOf(i); }
+    const slots=cuts.map((c,i)=>({t:c.t,d:(cuts[i+1]?cuts[i+1].t:want)-c.t,e:c.e})).filter(s=>s.d>0.15);
+    /* Drop finden: größter Energiesprung */
+    let drop=-1, dj=0.25; for(let i=1;i<slots.length;i++){ const j=slots[i].e-slots[i-1].e; if(j>dj){ dj=j; drop=i; } }
+    /* 2) Rohmaterial ansehen */
+    const A=new Map(); let k=0; for(const m of raw){ if(cancel.c) throw 'x'; k++; A.set(m.id,await aeAnalyze(m,cancel,'🎬 Schaue mir dein Material an',k,raw.length)); }
+    if(cancel.c) throw 'x';
+    /* 3) Für jeden Abschnitt die beste, noch nicht benutzte Stelle wählen */
+    $('#busyText').textContent='🎬 Schneide …';
+    const used=new Map(raw.map(m=>[m.id,[]])), plan=[]; let last=null;
+    for(const s of slots){ let best=null;
+      for(const m of raw){ const a=A.get(m.id);
+        if(a.img){ const u=used.get(m.id).length; const sc=0.42-u*0.3-(last===m.id?1:0)+Math.random()*0.05; if(!best||sc>best.sc) best={m,src:0,sc,speed:1}; continue; }
+        let need=s.d, speed=1; if(m.duration<need){ if(m.duration<need*0.5) continue; speed=m.duration/need*0.98; need=m.duration*0.98; }
+        const w=Math.max(1,Math.round(need/a.step));
+        for(let j=0;j+w<=a.n;j++){ let v=0,mo=0,cut=0; for(let q=j;q<j+w;q++){ v+=a.sc[q]; mo+=a.mot[q]; if(q>j&&a.cut[q]) cut=1; } v/=w; mo/=w;
+          const t0=a.t0+j*a.step; if(t0+need>m.duration) break;
+          let sc=v+0.35*(s.e>0.6?mo:(1-mo))*0.5-cut*0.6-(last===m.id?0.25:0);
+          for(const [u0,u1] of used.get(m.id)) if(t0<u1&&t0+need>u0) sc-=0.9;
+          sc+=Math.random()*0.03; if(!best||sc>best.sc) best={m,src:t0,sc,speed}; } }
+      if(!best){ const m=raw[plan.length%raw.length]; best={m,src:0,sc:0,speed:1}; }
+      used.get(best.m.id).push([best.src,best.src+s.d*best.speed]); last=best.m.id; plan.push({s,...best}); }
+    /* 4) Timeline bauen */
+    if(S.settings.aspect!==AE.aspect){ S.settings.aspect=AE.aspect; applyCanvasSize(); }
+    pause(); S.clips=[]; S.tracks=[makeTrack('visual'),makeTrack('audio')]; S.settings.markers=[]; const vt=S.tracks[0], at=S.tracks[1];
+    const TR=AE.trans; const created=[];
+    plan.forEach((p,i)=>{ const c=baseClip(p.m.type); c.mediaId=p.m.id; c.trackId=vt.id; c.start=p.s.t; c.duration=p.s.d; c.in=p.src; c.speed=p.speed; c.volume=AE.orig?0.2:0; c.fit='cover';
+      if(p.m.type==='image'){ c.kf={scale:[{t:0,v:1},{t:p.s.d,v:1.12}]}; c.kfEase='linear'; }
+      const strong=p.s.e>0.65; let tin='none';
+      if(TR==='flash'||(TR==='mix'&&(i===drop||(strong&&i%4===0)))) tin='flash'; else if(TR==='zoom'||(TR==='mix'&&strong&&i%3===1)) tin='zoomIn'; else if(TR==='mix'&&!strong&&i%5===2) tin='fade';
+      if(i===drop) tin='flash'; if(i>0&&tin!=='none'){ c.animIn=tin; c.animInDur=tin==='flash'?0.3:0.35; }
+      if(AE.zoom&&p.m.type!=='image'&&p.s.e>0.55){ const base=1, d=Math.min(0.18,p.s.d*0.4); c.kf.scale=[{t:0,v:base*1.08},{t:d,v:base}]; }
+      S.clips.push(c); created.push(c); });
+    if(drop>0){ const c=created[drop]; const fx=baseClip('effect'); fx.fx='shake'; fx.amt=45; fx.trackId=null; fx.start=c.start; fx.duration=Math.min(0.6,c.duration); const ft=makeTrack('visual'); S.tracks.unshift(ft); fx.trackId=ft.id; S.clips.push(fx); }
+    if(created.length){ const l=created[created.length-1]; l.animOut='fade'; l.animOutDur=Math.min(1,l.duration*0.5); }
+    let sc; if(song.type==='video'){ sc=baseClip('video'); const bt=makeTrack('visual'); S.tracks.splice(S.tracks.indexOf(vt)+1,0,bt); sc.trackId=bt.id; sc.opacity=0; } else { sc=baseClip('audio'); sc.trackId=at.id; } sc.mediaId=song.id; sc.start=0; sc.in=st; sc.duration=want; sc.volume=1; sc.afadeOut=want<song.duration-st-0.5?Math.min(2,want*0.1):0; sc.showBeats=false; S.clips.push(sc);
+    S.settings.markers=cuts.map(c=>Math.round(c.t*100)/100);
+    S.selected=null; S.t=0; commit(); renderAll(); busyDone();
+    if(AE.enhance){ await aiEnhance(); }
+    const vids=created.filter(c=>c.type==='video'); const ar=AE.aspect.split(':').map(Number), needRe=vids.some(c=>{ const m=mediaById(c.mediaId); return m&&m.w&&Math.abs(m.w/m.h-ar[0]/ar[1])>0.2; });
+    if(AE.follow&&needRe){ S.selected=null; AI.aspect=AE.aspect; await aiReframe(); }
+    syncMedia(0,true); requestRender();
+    toast(`🎬 Fertig! ${created.length} Schnitte im Takt (${g.bpm} BPM, ${fmtTime(want).slice(0,5)}) – Leertaste zum Ansehen. Nochmal klicken = neue Variante.`);
+  }catch(e){ if(e!=='x'){ console.warn('Auto-Edit',e); toast('Auto-Edit ging nicht: '+(e.message||e)); } else toast('Auto-Edit abgebrochen'); }
+  finally{ busyDone(); }
+}
+function aeCard(p){
+  const d=el('div'); d.id='aeCard'; d.style.cssText='background:linear-gradient(160deg,rgba(34,227,211,.12),rgba(124,92,255,.10));border:1px solid rgba(34,227,211,.45);border-radius:12px;padding:11px;margin:8px 0;display:flex;flex-direction:column;gap:8px';
+  const t=el('div',null,'🎬 Auto-Edit'); t.style.cssText='font-weight:800;font-size:15px';
+  d.append(t,el('p','note','Rohmaterial + Sound rein → fertiger Edit im Takt. Die KI sucht die besten Stellen, schneidet auf den Beat und setzt Übergänge und Effekte.'));
+  const imp=el('button','btn',''); imp.innerHTML=ic('upload')+'<span>Rohmaterial & Sound hinzufügen</span>'; imp.onclick=()=>$('#fileIn').click(); d.append(imp);
+  const list=el('div'); list.id='aeList'; d.append(list);
+  const chips=(label,opts,key)=>{ const c=el('div','chips'); for(const [v,l] of opts){ const ch=chip(l,AE[key]===v,()=>{ AE[key]=v; c.querySelectorAll('.chip').forEach(x=>x.classList.remove('act')); ch.classList.add('act'); }); c.append(ch); } const w=el('div'); w.append(el('div','note',label),c); d.append(w); };
+  chips('Länge',[['full','Ganzes Lied'],['15','15 s'],['30','30 s'],['60','60 s']],'len');
+  chips('Format',[['9:16','9:16 TikTok'],['16:9','16:9 YouTube'],['1:1','1:1'],['4:5','4:5']],'aspect');
+  chips('Schnitt-Tempo',[['auto','Passt sich an'],['slow','Ruhig'],['normal','Normal'],['fast','Schnell']],'tempo');
+  chips('Übergänge',[['mix','Mix'],['none','Harte Schnitte'],['flash','Blitz'],['zoom','Zoom']],'trans');
+  const x=el('div','chips'); for(const [k,l] of [['best','Bester Teil des Lieds'],['zoom','Zoom-Puls'],['enhance','Farben verbessern'],['follow','Motiv folgen'],['orig','Originalton leise']]){ const ch=chip(l,AE[k],()=>{ AE[k]=!AE[k]; ch.classList.toggle('act',AE[k]); }); x.append(ch); } const xw=el('div'); xw.append(el('div','note','Extras'),x); d.append(xw);
+  const go=el('button','btn pri','🎬 Edit erstellen'); go.style.cssText='font-size:14px;padding:10px'; go.onclick=autoEdit; d.append(go);
+  p.append(d); aeRefresh();
+}
+function aeRefresh(){ const L=$('#aeList'); if(!L) return; L.innerHTML='';
+  const snd=S.media.filter(m=>(m.type==='audio'||m.type==='video')&&!m.loading);
+  if(!AE.song||!mediaById(AE.song)){ const a=S.media.find(m=>m.type==='audio'&&!m.loading); AE.song=a?a.id:null; }
+  const sw=el('div'); sw.append(el('div','note','🎵 Sound')); const sel=el('select'); sel.style.width='100%'; const o0=el('option',null,snd.length?'– wählen –':'Noch kein Sound importiert'); o0.value=''; sel.append(o0);
+  for(const m of snd){ const o=el('option',null,(m.type==='audio'?'🎵 ':'🎞️ ')+m.name); o.value=m.id; sel.append(o); } sel.value=AE.song||''; sel.onchange=()=>{ AE.song=sel.value||null; aeRefresh(); }; sw.append(sel); L.append(sw);
+  const raw=S.media.filter(m=>(m.type==='video'||m.type==='image')&&m.id!==AE.song);
+  const rw=el('div'); rw.append(el('div','note',`🎞️ Rohmaterial (${raw.filter(m=>!AE.skip.has(m.id)).length} von ${raw.length})`));
+  if(!raw.length) rw.append(el('p','note','Noch keine Videos oder Bilder – oben hinzufügen.'));
+  const g=el('div'); g.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:4px';
+  for(const m of raw){ const on=!AE.skip.has(m.id), it=el('div'); it.title=m.name+(on?' – wird benutzt (klicken = weglassen)':' – wird weggelassen');
+    it.style.cssText=`aspect-ratio:1;border-radius:6px;background:#222 center/cover;cursor:pointer;border:2px solid ${on?'var(--ac)':'transparent'};opacity:${on?1:0.35};position:relative`;
+    if(m.thumb) it.style.backgroundImage=`url("${m.thumb}")`; it.onclick=()=>{ if(on) AE.skip.add(m.id); else AE.skip.delete(m.id); aeRefresh(); }; g.append(it); }
+  rw.append(g); L.append(rw); }
 function buildAIPane(){
   const p=$('#pane-ai'); if(!p) return; p.innerHTML='';
   p.append(el('h4',null,'KI-Assistent'));
   const st=el('p','note','Läuft komplett auf deinem PC – ohne Internet.'); p.append(st);
+  aeCard(p);
   ffReady().then(ok=>{ st.textContent=ok?'⚡ FFmpeg aktiv – schneller und genauer. Läuft komplett auf deinem PC.':'Läuft komplett auf deinem PC. (Mit FFmpeg im Desktop-Programm geht es schneller und genauer.)'; });
   const card=(title,desc,btnLabel,fn,extra)=>{ const d=el('div'); d.style.cssText='background:var(--p2);border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;display:flex;flex-direction:column;gap:7px';
     const t=el('div',null,title); t.style.cssText='font-weight:700'; d.append(t,el('p','note',desc)); if(extra) extra(d);
