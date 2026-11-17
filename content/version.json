@@ -1,5 +1,5 @@
 {
-  "version": "1.2.1",
-  "notes": "✨ Neu: 🎬 Auto-Edit\n• Rohmaterial + Sound rein → fertiger Edit im Takt\n• Sucht die besten Stellen, schneidet passend zur Musik, setzt Übergänge, Blitz am Drop und Zoom-Puls\n• Wählt den besten Teil des Lieds (15 s / 30 s / 60 s), Hochformat mit Motiv-Verfolgung\n• Jeder Klick = neue Variante",
-  "date": "2026-11-14"
+  "version": "1.2.2",
+  "notes": "✨ Neu: 🫥 Zensieren\n• Gesichter, Kennzeichen & Co. unkenntlich machen – einfach im Bild anklicken\n• Folgt automatisch, wenn sich das Video bewegt (Tracking)\n• Weichzeichnen, Verpixeln, Balken, Farbe oder Emoji – mit Stärke, Form, Größe und weichem Rand",
+  "date": "2026-11-17"
 }
